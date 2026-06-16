@@ -33,3 +33,37 @@ Kodowanie znaków też nie ma standardu. Plik z Excela na Windows bywa w Windows
 Po przesłaniu pliku admin nie dostaje natychmiastowego feedbacku. W formularzu pojedynczego usera błąd pokazuje się przy polu od razu; przy CSV ten loop trzeba odtworzyć dopiero po imporcie — raport per wiersz z liczbą zapisanych, pominiętych, oraz listą błędów (numer linii, pole, powód). Bez tego admin nie wie, czy import się udał, ani co poprawić.
 
 Rozmiar i liczba wierszy też nie są ograniczone w samym formacie. Nic nie powstrzymuje admina przed wgraniem 500 MB albo 200 000 wierszy — przez nieuwagę albo złośliwie. System ma jawne limity rozmiaru i liczby wierszy; powyżej nich zwraca błąd z czytelnym komunikatem. Sama wartość liczbowa to detal implementacyjny; obecność limitu jest deklaracją skali, w której to narzędzie ma działać.
+
+## 4. Decyzje implementacyjne
+
+Partial success zamiast all-or-nothing. Kiedy plik ma 100 wierszy a 20 jest niepoprawnych, zapisujemy 80 poprawnych i raportujemy 20 z opisem błędu — zamiast odrzucać cały import. Bez tego jedna literówka unieważnia cały plik; admin wraca do arkusza i wgrywa ponownie. Cena leży w warstwie aplikacyjnej: walidacja i śledzenie wyniku per wiersz, mapowanie błędów na kody. Same wstawienia do bazy nadal idą jednym batchem, więc nie jest to koszt w SQL.
+
+Preflight SELECT + filtered batch INSERT zamiast INSERT z ON CONFLICT DO NOTHING. Najpierw jedna kwerenda SELECT po wszystkich emailach z importu, potem filtrujemy te już istniejące, na koniec batch INSERT pozostałych. Alternatywa -insert wszystko, baza milcząco pominie konflikty, wymaga porównania wysłanego z wstawionym, żeby ustalić co zostało odrzucone. Preflight kosztuje jeden dodatkowy SELECT, ale daje gotowy raport per wiersz bez post-processingu.
+
+Response shape. Endpoint zwraca 200 z body opisującym wynik importu — liczbę zapisanych, pominiętych oraz listę błędów per wiersz — zarówno dla pełnego sukcesu, jak i partial success. Status 422 ma sens dopiero wtedy, gdy żaden rekord nie został zapisany, bo wtedy operacja nie przyniosła żadnego użytecznego efektu. Status 400 zostaje dla nieparsowalnego CSV, a 413 dla przekroczenia limitu rozmiaru lub liczby wierszy. Rozważałem 207 Multi-Status, bo dobrze oddaje mieszany wynik operacji, ale ten kod najczęściej pojawia się w kontekście WebDAV i nie jest typowym wyborem dla zwykłych endpointów REST. W praktyce 200 z przewidywalnym, ustrukturyzowanym body jest prostsze dla klienta, czytelniejsze w logach i mniej zaskakujące przy integracji.
+
+Prisma zamiast TypeORM. Schema w pliku schema.prisma jest jedynym źródłem prawdy modelu danych — z niej generują się typy używane wprost w serwisie, bez duplikowania jako Entity i interfejs odpowiedzi. Migracje przez prisma migrate dev są krótsze proceduralnie niż TypeORM CLI. Cena: kilka linii PrismaService extends PrismaClient z OnModuleInit, co jest mniej Nest-native niż @nestjs/typeorm, ale w zamian dostajemy end-to-end type-safety na zapytaniach.
+
+TanStack Query zamiast ręcznego useState + refetch. Lista użytkowników odświeża się po każdej mutacji (single-user POST, CSV import) przez queryClient.invalidateQueries — jedna linia zamiast ręcznego wołania refetch po sukcesie. Loading, error i refetch state przychodzą gotowe z useQuery, bez trzech useState na zapytanie. Koszt: dodatkowa zależność ~13 kB gzip i jednorazowy setup QueryClientProvider w main.tsx; w zamian wbudowana cache invalidation (jedno wywołanie zamiast własnej logiki refetch) i mniej miejsc, w których można zapomnieć odświeżyć dane.
+
+Paginacja jako element podstawowego kontraktu listy. GET /users zwraca {users, total, page, pageSize}, frontend używa ShadCN Pagination + queryKey z page w TanStack Query. Bez tego lista po imporcie tysięcy wierszy zalewa DOM.
+
+Limity rozmiaru pliku i liczby wierszy jako dwa niezależne guardy. Multer odrzuca upload powyżej 2 MB jeszcze przed parsowaniem, dzięki czemu nie zużywamy zasobów na pliki wykraczające poza założoną skalę. Po sparsowaniu odrzucamy plik z więcej niż 10 000 wierszami, bo nawet niewielki plik może zawierać bardzo krótkie, gęsto upakowane rekordy. To dwa różne ograniczenia i każde adresuje inny koszt operacyjny. Powyżej tej skali import nadal może być technicznie wykonalny przez sync HTTP, ale przestaje być dobrym kontraktem dla przewidywalnej operacji administracyjnej. Wtedy lepszym kierunkiem staje się streaming albo przetwarzanie asynchroniczne przez kolejkę.
+
+## 5. Skala
+
+W obecnym zadaniu świadomie zostaję przy imporcie synchronicznym: plik jest wczytywany w pamięć, parsowany przez csv-parse/sync, a jeden request HTTP zwraca od razu raport wyniku. To wystarcza dla administracyjnych importów rzędu dziesiątek, setek czy kilku tysięcy rekordów i dobrze pasuje do wymagań zadania, gdzie najważniejsze są prostota rozwiązania oraz czytelny feedback per wiersz.
+
+Gdyby skala realnie rosła, pierwszym krokiem nie byłaby od razu kolejka, tylko parsowanie strumieniowe i inserty batchami. Taki wariant ogranicza zużycie pamięci i lepiej znosi większe pliki, a nadal zachowuje prosty model jednego requestu i jednej odpowiedzi.
+
+Kolejka i osobny worker mają sens dopiero wtedy, gdy import staje się operacją długą, podatną na timeouty albo częścią większego workflow, który musi przeżyć restart aplikacji i wspierać ponawianie. To sensowny kierunek rozwoju, ale na potrzeby tego zadania byłby przedwczesną komplikacją.
+
+## 6. Co świadomie zostawiam poza scope
+
+Autentykacja i autoryzacja. W realnym systemie byłyby konieczne, ale nie wpływają na ocenę samego mechanizmu importu użytkowników.
+
+Edycja i usuwanie użytkowników. To osobny obszar funkcjonalny, niezwiązany bezpośrednio z problemem masowego onboardingu.
+
+Parsowanie strumieniowe, kolejka i idempotencja. To sensowne kierunki rozwoju przy większej skali lub długotrwałym przetwarzaniu, ale na potrzeby tego zadania byłyby przedwczesną komplikacją.
+
+Testy E2E. W tym zadaniu większą wartość dają testy jednostkowe walidacji i logiki importu. Pełne E2E zwiększyłoby koszt przygotowania środowiska bardziej niż realnie podniosło pewność najważniejszych elementów rozwiązania.
