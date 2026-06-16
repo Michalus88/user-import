@@ -50,18 +50,30 @@ Jeśli powstaną typy współdzielone (DTO request/response) — `packages/share
 
 ## 4. Backend (NestJS + Prisma)
 
-Struktura modułu:
-- `users.module.ts`
-- `users.controller.ts`
-- `users.service.ts`
-- `dto/create-user.dto.ts`
-
-Plus na poziomie aplikacji: `prisma/schema.prisma` (model danych) i `src/prisma/prisma.service.ts` (singleton extending `PrismaClient` z `OnModuleInit`).
+Layout aplikacji backendu:
+```
+apps/backend/
+  prisma/
+    schema.prisma           — model danych, single source of truth
+    migrations/             — wygenerowane przez prisma migrate
+  src/
+    main.ts, app.module.ts
+    config/                 — AppConfig + ConfigModule (walidacja env)
+    database/               — DatabaseModule + DatabaseService (extends PrismaClient)
+    modules/                — feature modules
+      users/
+        dto/
+        users.module.ts
+        users.controller.ts
+        users.service.ts    — business logic
+        users.repository.ts — jedyny punkt styku z DatabaseService
+```
 
 Reguły:
+- Każdy feature module żyje w `src/modules/<feature>/`. Plik repository jest obowiązkowy — service NIE wywołuje `DatabaseService` bezpośrednio, tylko przez repository. To jedyna warstwa stykająca się z ORM.
 - Dane wejściowe walidowane przez DTO z `class-validator` + globalny `ValidationPipe`.
 - Mapowanie błędów: Prisma `P2002` (unique constraint) → `ConflictException` z czytelnym `code` w body. Nie sprawdzać istnienia przed `INSERT` (race condition).
-- Migracje: `prisma migrate dev` w trybie dev; schema żyje w `prisma/schema.prisma`.
+- Migracje: `prisma migrate dev` w trybie dev; schema żyje w `apps/backend/prisma/schema.prisma`.
 - Typy odpowiedzi: korzystamy z auto-generowanych typów Prismy (`User` z `@prisma/client`); nie duplikujemy ich jako interfejsów.
 - Endpoint `GET /users` zwraca `{ users, total, page, pageSize }`, nie samą tablicę — wymagane do UI paginacji. Default `pageSize = 50`.
 - ESLint blokuje `any` i floating promises jako błąd. Konfiguracja w `apps/backend/eslint.config.mjs`.
