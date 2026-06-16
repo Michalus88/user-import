@@ -1,0 +1,94 @@
+{
+  "version": "1.0",
+  "description": "Skill activation triggers for Claude Code. Controls when skills automatically suggest or block actions.",
+  "skills": {
+    "solid": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "high",
+      "description": "SOLID principles, TDD, and clean code practices for senior-quality software design",
+      "promptTriggers": {
+        "keywords": [
+          "SOLID",
+          "clean code",
+          "TDD",
+          "refactor",
+          "architecture",
+          "design pattern",
+          "single responsibility",
+          "dependency inversion",
+          "code review",
+          "code quality"
+        ],
+        "intentPatterns": [
+          "(refactor|redesign|restructure).*?(code|class|module|service)",
+          "(implement|write|create).*?(feature|module|service|controller)",
+          "(review|improve|clean up).*?(code|design|architecture)",
+          "(how to|best practice).*?(design|architect|structure)"
+        ]
+      },
+      "fileTriggers": {
+        "pathPatterns": [
+          "**/*.ts",
+          "**/*.tsx",
+          "**/*.js",
+          "**/*.jsx"
+        ],
+        "pathExclusions": ["**/*.test.ts", "**/*.spec.ts", "**/node_modules/**"]
+      }
+    },
+    "vercel-react-best-practices": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "high",
+      "description": "React and Next.js performance optimization guidelines from Vercel Engineering",
+      "promptTriggers": {
+        "keywords": [
+          "React",
+          "component",
+          "hook",
+          "useState",
+          "useEffect",
+          "useMemo",
+          "useCallback",
+          "render",
+          "performance",
+          "frontend",
+          "UI",
+          "form",
+          "upload",
+          "file input"
+        ],
+        "intentPatterns": [
+          "(create|build|implement).*?(component|page|form|UI)",
+          "(optimize|improve).*?(render|performance|React)",
+          "(fix|debug).*?(render|re-render|React|component)",
+          "(how to|best practice).*?(React|component|hook)"
+        ]
+      },
+      "fileTriggers": {
+        "pathPatterns": [
+          "**/*.tsx",
+          "**/*.jsx",
+          "frontend/**/*.ts",
+          "client/**/*.ts",
+          "web/**/*.ts"
+        ],
+        "pathExclusions": ["**/*.test.tsx", "**/*.spec.tsx", "**/node_modules/**"]
+      }
+    }
+  },
+  "notes": {
+    "enforcement_types": {
+      "suggest": "Skill suggestion appears but doesn't block execution",
+      "block": "Requires skill to be used before proceeding (guardrail)",
+      "warn": "Shows warning but allows proceeding"
+    },
+    "priority_levels": {
+      "critical": "Highest - Always trigger when matched",
+      "high": "Important - Trigger for most matches",
+      "medium": "Moderate - Trigger for clear matches",
+      "low": "Optional - Trigger only for explicit matches"
+    }
+  }
+}

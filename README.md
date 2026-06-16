@@ -1,0 +1,48 @@
+# Panel administratora — import użytkowników
+
+Aplikacja pozwalająca administratorowi dodawać użytkowników pojedynczo przez formularz oraz importować większą grupę z pliku CSV.
+
+Główny dokument dla osoby oceniającej: [`ANALIZA.md`](./ANALIZA.md) — kontekst biznesowo-techniczny, decyzje, ograniczenia CSV i mitygacje.
+
+## Wymagania
+
+- Node.js 22+
+- pnpm 10+
+- Docker (PostgreSQL)
+
+Minimum jest zadeklarowane w `engines` w `package.json`, nie pinujemy konkretnej wersji — to recruitment scope. W produkcji wersja runtime byłaby zamrożona przez Docker image w CI.
+
+## Uruchomienie
+
+```bash
+pnpm install                                    # zależności
+cp apps/backend/.env.example apps/backend/.env  # config
+docker compose up -d                            # baza
+pnpm --filter backend prisma migrate dev        # migracje
+pnpm dev                                        # backend :3000 + frontend :5173
+```
+
+## Testy
+
+```bash
+pnpm --filter backend test
+```
+
+## Struktura
+
+```
+apps/
+  backend/    NestJS + Prisma
+  frontend/   React + Vite + Tailwind
+ANALIZA.md    analiza biznesowo-techniczna, decyzje
+CLAUDE.md     entry point dla agenta
+specs/        specy featurów
+```
+
+## Konwencje
+
+- Dokumentacja (README, ANALIZA, CLAUDE) — po polsku
+- Kod, nazwy plików, identyfikatory — po angielsku
+- Commit messages — Conventional Commits po angielsku
+- Kody błędów API — po angielsku (`INVALID_EMAIL`, `DUPLICATE_IN_FILE`)
+- Teksty UI dla użytkownika — po polsku
