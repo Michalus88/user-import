@@ -1,0 +1,9 @@
+{
+  "name": "@shared/types",
+  "version": "0.0.1",
+  "exports": {
+    ".": {
+      "types": "./index.ts"
+    }
+  }
+}
