@@ -29,7 +29,9 @@ function validate(raw: Record<string, unknown>): AppConfig {
     {
       provide: AppConfig,
       useFactory: (): AppConfig =>
-        plainToInstance(AppConfig, process.env, { enableImplicitConversion: true }),
+        plainToInstance(AppConfig, process.env, {
+          enableImplicitConversion: true,
+        }),
     },
   ],
   exports: [AppConfig],

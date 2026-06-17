@@ -2,7 +2,10 @@ import { validate } from 'class-validator';
 import { CreateUserDto } from './create-user.dto';
 
 const validDto = (): CreateUserDto =>
-  Object.assign(new CreateUserDto(), { username: 'alice', email: 'alice@example.com' });
+  Object.assign(new CreateUserDto(), {
+    username: 'alice',
+    email: 'alice@example.com',
+  });
 
 describe('CreateUserDto', () => {
   it('passes validation for valid input', async () => {
