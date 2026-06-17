@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Entry point dla agenta. Czytaj zanim cokolwiek zaimplementujesz. Tok rozumowania → `ANALIZA.md`. Aktualny spec featuru → `specs/NN-*.md`.
+Entry point dla agenta. Czytaj zanim cokolwiek zaimplementujesz. Tok rozumowania → `ANALIZA.md`. Aktualny spec featuru → `context/specs/NN-*.md`. Workflow implementacji (pętla, DoD, git) → `context/rules-for-agent.md`.
 
 ## 1. Co budujemy
 
@@ -42,7 +42,7 @@ apps/
   frontend/                — React + Vite
 docker-compose.yml         — Postgres dla lokalnego dev
 ANALIZA.md                 — tok rozumowania, decyzje
-specs/                     — feature specy (per implementacja)
+context/specs/             — feature specy (per implementacja)
 README.md                  — quick start
 ```
 
@@ -120,9 +120,7 @@ Reguły:
 - Bez auth i autoryzacji — poza scope.
 - Bez przedwczesnych abstrakcji — trzy podobne linie są lepsze niż abstrakcja „na wszelki wypadek".
 - Bez nowych ORM-ów, HTTP clientów, bibliotek bez konsultacji.
-- Bez streaming parsing, kolejek, jobów w tle.
-- Bez commitów i pushy bez wyraźnej prośby.
-- Przed implementacją: przeczytaj odpowiedni spec w `specs/`.
+- Bez magic stringów — stałe wartości jako nazwane stałe lub enum.
 - Bez `as` castów do naprawiania niezgodności typów. Cast = sygnał, że typ upstream jest zły — naprawiać źródło, nie miejsce użycia. Wyjątek: mocki i partial doubles w testach (`*.spec.ts`).
 - Typy płyną naturalnie przez system. Jeśli funkcja/komponent produkuje `TypeA`, callbacki i konsumenci przyjmują `TypeA`, nie węższy typ wymagający kastowania po stronie wywołania.
 - Dokumentacja odbija stan zaimplementowany, nie aspiracyjny. Po zakończeniu featuru usuwać markery „TODO", „planowane", niedziałające komendy z README. Stałe nieaktualne docsy są gorsze niż brak.
@@ -130,5 +128,5 @@ Reguły:
 ## 7. Gdzie szukać kontekstu
 
 - Dlaczego coś robimy → `ANALIZA.md`
-- Co konkretnie buduję teraz → `specs/NN-*.md`
+- Co konkretnie buduję teraz → `context/specs/NN-*.md`
  
