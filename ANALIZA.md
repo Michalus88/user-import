@@ -48,6 +48,8 @@ Response shape. Endpoint zwraca 200 z body opisującym wynik importu — liczbę
 
 Prisma zamiast TypeORM. Schema w pliku schema.prisma jest jedynym źródłem prawdy modelu danych — z niej generują się typy używane wprost w serwisie, bez duplikowania jako Entity i interfejs odpowiedzi. Migracje przez prisma migrate dev są krótsze proceduralnie niż TypeORM CLI. Cena: kilka linii PrismaService extends PrismaClient z OnModuleInit, co jest mniej Nest-native niż @nestjs/typeorm, ale w zamian dostajemy end-to-end type-safety na zapytaniach.
 
+Walidacja danych użytkownika wpisywanych przez admina jako wspólna reguła dla obu stron. Regex dla pola username trzymam w packages/constants i używam go i na backendzie (DTO + class-validator), i na frontendzie (walidacja przed wysyłką). Dzięki temu zasada jest dokładnie ta sama w obu miejscach i minimalizujemy wystąpienie tego błędu.
+
 TanStack Query zamiast ręcznego useState + refetch. Lista użytkowników odświeża się po każdej mutacji (single-user POST, CSV import) przez queryClient.invalidateQueries — jedna linia zamiast ręcznego wołania refetch po sukcesie. Loading, error i refetch state przychodzą gotowe z useQuery, bez trzech useState na zapytanie. Koszt: dodatkowa zależność ~13 kB gzip i jednorazowy setup QueryClientProvider w main.tsx; w zamian wbudowana cache invalidation (jedno wywołanie zamiast własnej logiki refetch) i mniej miejsc, w których można zapomnieć odświeżyć dane.
 
 Paginacja jako element podstawowego kontraktu listy. GET /users zwraca {users, total, page, pageSize}, frontend używa ShadCN Pagination + queryKey z page w TanStack Query. Bez tego lista po imporcie tysięcy wierszy zalewa DOM.
