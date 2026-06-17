@@ -28,7 +28,11 @@ Brak walidacji wewnątrz pliku. Excel i Sheets niczego nie wymuszają, więc adm
 
 Duplikaty w obrębie pliku się zdarzają. Cicha deduplikacja byłaby gorsza niż błąd, bo admin nie zauważy, że rekord zniknął. Pierwsze wystąpienie zostaje, kolejne raportujemy jako duplikat z odniesieniem do wiersza-oryginału.
 
-Kodowanie znaków też nie ma standardu. Plik z Excela na Windows bywa w Windows-1250, z Google Sheets w UTF-8, sam plik tej informacji w sobie nie nosi. Wymagam UTF-8 — inne kodowanie daje czytelny komunikat zamiast zniekształconych polskich znaków w bazie.
+Kodowanie znaków w CSV nie jest ustandaryzowane, więc parser akceptuje wyłącznie UTF-8 i usuwa BOM. Plik w innym kodowaniu odrzucamy jeszcze przed parsowaniem, żeby uniknąć zapisu zniekształconych danych. W produkcji warto dodać detekcję kodowania i transkodowanie do UTF-8 z ręcznym potwierdzeniem, ale tutaj zostaje twardy wymóg UTF-8.
+
+Separator także bywa różny. W wielu lokalnych ustawieniach Excel eksportuje CSV ze średnikiem zamiast przecinka. Dlatego parser wybiera separator na podstawie pierwszej linii: bierze dominujący znak z zestawu przecinek/średnik/tab, a przy remisie używa przecinka. To daje przewidywalne działanie i minimalizuje ryzyko cichego błędu.
+
+Podgląd przed zapisem jest poza zakresem. Sama detekcja kodowania i walidacja wierszy nie gwarantują, że dane wyglądają dokładnie tak, jak oczekuje admin. Docelowo warto mieć etap podglądu kilku pierwszych rekordów i dopiero potem potwierdzenie importu, ale to wymaga dwuetapowego API i przechowania pliku między requestami.
 
 Po przesłaniu pliku admin nie dostaje natychmiastowego feedbacku. W formularzu pojedynczego usera błąd pokazuje się przy polu od razu; przy CSV ten loop trzeba odtworzyć dopiero po imporcie — raport per wiersz z liczbą zapisanych, pominiętych, oraz listą błędów (numer linii, pole, powód). Bez tego admin nie wie, czy import się udał, ani co poprawić.
 
@@ -66,4 +70,8 @@ Edycja i usuwanie użytkowników. To osobny obszar funkcjonalny, niezwiązany be
 
 Parsowanie strumieniowe, kolejka i idempotencja. To sensowne kierunki rozwoju przy większej skali lub długotrwałym przetwarzaniu, ale na potrzeby tego zadania byłyby przedwczesną komplikacją.
 
+Throttling importu jest poza scope: bez auth limitowanie po IP w aplikacji jest mało skuteczne, a właściwa ochrona powinna być na poziomie reverse proxy lub WAF. W tym zadaniu ryzyko ograniczają limity rozmiaru pliku i liczby wierszy.
+
 Testy E2E. W tym zadaniu większą wartość dają testy jednostkowe walidacji i logiki importu. Pełne E2E zwiększyłoby koszt przygotowania środowiska bardziej niż realnie podniosło pewność najważniejszych elementów rozwiązania.
+
+Zamiast bootstrapować TestingModule, testy jednostkowe tworzą kontrolery, serwisy i filtry bezpośrednio przez new. To szybsze i czytelniej pokazuje, co jest mockowane. Minusem jest brak weryfikacji konfiguracji NestJS (DI i dekoratory, np. UseFilters czy HttpCode). Te elementy powinny sprawdzać testy E2E z supertest, ale są poza zakresem zadania, więc świadomie akceptuję ten kompromis.

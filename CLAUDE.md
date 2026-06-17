@@ -46,7 +46,7 @@ context/specs/             — feature specy (per implementacja)
 README.md                  — quick start
 ```
 
-Jeśli powstaną typy współdzielone (DTO request/response) — `packages/shared/`. Decyzja per potrzeba; nie tworzymy z góry.
+Typy współdzielone backend↔frontend żyją w `packages/types/` (importowane jako `@shared/types`).
 
 ## 4. Backend (NestJS + Prisma)
 
@@ -73,6 +73,10 @@ apps/backend/
         users.controller.ts
         users.service.ts    — business logic
         users.repository.ts — jedyny punkt styku z DatabaseService
+        csv-import.parser.ts   — parsowanie CSV i walidacja per wiersz
+        csv-import.service.ts  — orkiestracja importu (preflight + batch insert)
+        csv-import.errors.ts   — domenowe błędy importu + kody błędów per wiersz
+        csv-upload.filter.ts   — mapowanie MulterError na odpowiedzi HTTP
 ```
 
 Reguły:
@@ -83,7 +87,7 @@ Reguły:
 - Typy odpowiedzi: korzystamy z auto-generowanych typów Prismy (`User` z `@prisma/client`); nie duplikujemy ich jako interfejsów.
 - Endpoint `GET /users` zwraca `{ users, total, page, pageSize }`, nie samą tablicę — wymagane do UI paginacji. Default `pageSize = 50`.
 - ESLint blokuje `any` i floating promises jako błąd. Konfiguracja w `apps/backend/eslint.config.mjs`.
-- Testy: unit testy serwisu i walidatora. Fixtures CSV w `apps/backend/test/fixtures/`.
+- Testy: unit testy parsera, serwisu, kontrolera i filtrów. CSV w testach budowane inline przez `Buffer.from(...)`, bez osobnego katalogu fixtures.
 
 ## 5. Frontend (React)
 

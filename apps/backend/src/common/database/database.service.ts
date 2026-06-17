@@ -4,7 +4,10 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { AppConfig } from '../config/app-config';
 
 @Injectable()
-export class DatabaseService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
+export class DatabaseService
+  extends PrismaClient
+  implements OnModuleInit, OnModuleDestroy
+{
   constructor(config: AppConfig) {
     const adapter = new PrismaPg({ connectionString: config.DATABASE_URL });
     super({ adapter });

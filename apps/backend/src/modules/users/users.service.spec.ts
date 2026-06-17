@@ -28,7 +28,10 @@ describe('UsersService', () => {
   });
 
   describe('create', () => {
-    const dto: CreateUserDto = { username: 'alice', email: 'alice@example.com' };
+    const dto: CreateUserDto = {
+      username: 'alice',
+      email: 'alice@example.com',
+    };
 
     it('returns the created user on success', async () => {
       const user = mockUser();
@@ -41,10 +44,13 @@ describe('UsersService', () => {
     });
 
     it('throws UserAlreadyExistsError on P2002', async () => {
-      const p2002 = new Prisma.PrismaClientKnownRequestError('Unique constraint', {
-        code: 'P2002',
-        clientVersion: '0',
-      });
+      const p2002 = new Prisma.PrismaClientKnownRequestError(
+        'Unique constraint',
+        {
+          code: 'P2002',
+          clientVersion: '0',
+        },
+      );
       repo.create.mockRejectedValue(p2002);
 
       await expect(service.create(dto)).rejects.toThrow(UserAlreadyExistsError);
