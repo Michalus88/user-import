@@ -20,7 +20,8 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false,
     "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false
+    "noFallthroughCasesInSwitch": false,
+    "types": ["jest", "node"]
   },
   "exclude": ["node_modules", "dist", "prisma.config.ts", "prisma.config.js", "prisma.config.d.ts"]
 }
