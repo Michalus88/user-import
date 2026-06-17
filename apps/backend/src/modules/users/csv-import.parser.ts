@@ -10,6 +10,7 @@ import {
 } from './csv-import.errors';
 
 const MAX_ROWS = 10_000;
+const USERNAME_MIN_LENGTH = 3;
 const REQUIRED_HEADERS = ['username', 'email'] as const;
 const CANDIDATE_DELIMITERS = [',', ';', '\t'] as const;
 const DEFAULT_DELIMITER = ',';
@@ -93,6 +94,13 @@ export function parseCsv(buffer: Buffer): ParseResult {
         field: 'username',
         code: IMPORT_ERROR_CODES.USERNAME_REQUIRED,
         message: 'Username is required',
+      });
+    } else if (username.trim().length < USERNAME_MIN_LENGTH) {
+      rowErrors.push({
+        row: rowNumber,
+        field: 'username',
+        code: IMPORT_ERROR_CODES.USERNAME_INVALID,
+        message: 'Username must be at least 3 characters',
       });
     }
 

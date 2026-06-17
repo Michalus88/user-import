@@ -1,9 +1,9 @@
 import { ICreateUserRequest } from '@shared/types';
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsString, MinLength } from 'class-validator';
 
 export class CreateUserDto implements ICreateUserRequest {
   @IsString()
-  @IsNotEmpty()
+  @MinLength(3)
   username!: string;
 
   @IsEmail()
