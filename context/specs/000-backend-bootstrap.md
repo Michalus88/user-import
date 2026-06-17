@@ -37,13 +37,13 @@ Set up the NestJS backend with shared application defaults so all later features
 
 ## Acceptance Criteria / Progress Checklist
 
-- [ ] Backend bootstrap enables the global `ValidationPipe` with the agreed options
-- [ ] `helmet` is enabled for the NestJS app
-- [ ] CORS allows the frontend development origin to call the API
-- [ ] Required backend environment variables are validated at startup
-- [ ] All API routes are reachable under the `/api` prefix
-- [ ] Shutdown hooks are enabled and trigger cleanup of injected services
-- [ ] Backend starts successfully with the shared bootstrap defaults in place
+- [x] Backend bootstrap enables the global `ValidationPipe` with the agreed options
+- [x] `helmet` is enabled for the NestJS app
+- [x] CORS allows the frontend development origin to call the API
+- [x] Required backend environment variables are validated at startup
+- [x] All API routes are reachable under the `/api` prefix
+- [x] Shutdown hooks are enabled and trigger cleanup of injected services
+- [x] Backend starts successfully with the shared bootstrap defaults in place
 
 ## Out of Scope
 
