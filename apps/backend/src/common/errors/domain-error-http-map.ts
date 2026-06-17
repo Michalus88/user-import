@@ -1,5 +1,6 @@
 import { HttpStatus } from '@nestjs/common';
 import {
+  InvalidEncodingError,
   MalformedCsvError,
   RowCountExceededError,
 } from '../../modules/users/csv-import.errors';
@@ -12,5 +13,6 @@ export const DOMAIN_ERROR_HTTP_MAP = new Map<
 >([
   [UserAlreadyExistsError, HttpStatus.CONFLICT],
   [MalformedCsvError, HttpStatus.BAD_REQUEST],
+  [InvalidEncodingError, HttpStatus.BAD_REQUEST],
   [RowCountExceededError, HttpStatus.PAYLOAD_TOO_LARGE],
 ]);
