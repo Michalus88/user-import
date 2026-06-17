@@ -88,7 +88,6 @@ Reguły:
 - Endpoint `GET /users` zwraca `{ users, total, page, pageSize }`, nie samą tablicę — wymagane do UI paginacji. Default `pageSize = 50`.
 - ESLint blokuje `any` i floating promises jako błąd. Konfiguracja w `apps/backend/eslint.config.mjs`.
 - Testy: unit testy parsera, serwisu, kontrolera i filtrów. CSV w testach budowane inline przez `Buffer.from(...)`, bez osobnego katalogu fixtures.
-- CSV: parser zakłada UTF-8 (BOM dozwolony, strippowany). Bufor w innym kodowaniu odrzucany przez `InvalidEncodingError` (`ENCODING_NOT_UTF8` → 400) przed parsowaniem. Auto-detect kodowania i sniff delimitera poza scope — uzasadnione w `ANALIZA.md`.
 
 ## 5. Frontend (React)
 
