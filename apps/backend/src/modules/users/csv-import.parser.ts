@@ -1,6 +1,7 @@
 import { isUtf8 } from 'node:buffer';
 import { isEmail } from 'class-validator';
 import { parse } from 'csv-parse/sync';
+import { USERNAME_REGEX } from '@shared/constants';
 import { ImportRowError } from '@shared/types';
 import {
   IMPORT_ERROR_CODES,
@@ -95,12 +96,15 @@ export function parseCsv(buffer: Buffer): ParseResult {
         code: IMPORT_ERROR_CODES.USERNAME_REQUIRED,
         message: 'Username is required',
       });
-    } else if (username.trim().length < USERNAME_MIN_LENGTH) {
+    } else if (
+      username.trim().length < USERNAME_MIN_LENGTH ||
+      !USERNAME_REGEX.test(username.trim())
+    ) {
       rowErrors.push({
         row: rowNumber,
         field: 'username',
         code: IMPORT_ERROR_CODES.USERNAME_INVALID,
-        message: 'Username must be at least 3 characters',
+        message: 'Username must be at least 3 characters and contain only letters, digits and spaces',
       });
     }
 

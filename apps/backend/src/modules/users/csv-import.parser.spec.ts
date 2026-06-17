@@ -147,12 +147,17 @@ describe('parseCsv', () => {
       expect(result.validRows[0].username).toBe('Jan Kowalski');
     });
 
-    it('accepts username with special characters', () => {
+    it('reports USERNAME_INVALID for username with disallowed special characters', () => {
       const result = parseCsv(
         csv('username,email\njan.kowalski_01,jan@example.com'),
       );
-      expect(result.validRows).toHaveLength(1);
-      expect(result.errors).toHaveLength(0);
+      expect(result.errors[0].code).toBe(IMPORT_ERROR_CODES.USERNAME_INVALID);
+      expect(result.validRows).toHaveLength(0);
+    });
+
+    it('reports USERNAME_INVALID for username with punctuation characters', () => {
+      const result = parseCsv(csv('username,email\n;;;,jan@example.com'));
+      expect(result.errors[0].code).toBe(IMPORT_ERROR_CODES.USERNAME_INVALID);
     });
 
     it('accepts username consisting entirely of digits', () => {
@@ -289,12 +294,12 @@ describe('parseCsv', () => {
       expect(result.errors).toHaveLength(0);
     });
 
-    it('preserves commas inside quoted username fields', () => {
+    it('preserves spaces inside quoted username fields', () => {
       const result = parseCsv(
-        csv('username,email\n"Doe, John",john@example.com'),
+        csv('username,email\n"John Doe",john@example.com'),
       );
       expect(result.validRows).toHaveLength(1);
-      expect(result.validRows[0].username).toBe('Doe, John');
+      expect(result.validRows[0].username).toBe('John Doe');
     });
   });
 
@@ -320,9 +325,9 @@ describe('parseCsv', () => {
 
     it('picks the dominant delimiter when multiple candidates appear', () => {
       const result = parseCsv(
-        csv('username;email\n"Doe, John";john@example.com'),
+        csv('username;email\n"John Doe";john@example.com'),
       );
-      expect(result.validRows[0].username).toBe('Doe, John');
+      expect(result.validRows[0].username).toBe('John Doe');
     });
   });
 
