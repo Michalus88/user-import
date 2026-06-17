@@ -35,8 +35,12 @@ In-file duplicates:
 
 Accepted input variants:
 - Encoding: UTF-8, with or without leading BOM (Excel-on-Windows export)
+- Delimiter: comma, semicolon, or tab — auto-detected from the header line; comma is the fallback
 - Line endings: LF, CRLF
 - Quoted fields containing commas (standard CSV escaping)
+
+Rejected input variants:
+- Non-UTF-8 encoded files return a deterministic error code instead of being silently coerced
 
 ## Acceptance Criteria / Progress Checklist
 
@@ -48,6 +52,8 @@ Accepted input variants:
 - [x] Error entries include row number, field, code, and message
 - [x] Parser output cleanly separates valid rows from validation errors
 - [x] UTF-8 BOM, CRLF line endings, and quoted commas are accepted
+- [x] Delimiter is detected from the header line (comma, semicolon, tab)
+- [x] Non-UTF-8 buffers are rejected with a deterministic error before parsing
 - [x] Unit tests cover header errors, field errors, duplicate-in-file behavior, and accepted input variants
 
 ## Out of Scope
@@ -56,5 +62,4 @@ Accepted input variants:
 - Batch insert implementation
 - Upload size/row-count limits
 - Auto-detection of non-UTF-8 encodings (Windows-1250/1252, ISO-8859-1/2) — production-grade handling discussed in analysis
-- Delimiter auto-detection (semicolon-separated CSV from localized Excel) — production-grade handling discussed in analysis
 - Pre-save preview UI for manual encoding/content confirmation — production-grade flow discussed in analysis
