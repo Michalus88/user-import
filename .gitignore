@@ -6,6 +6,11 @@ dist/
 build/
 *.tsbuildinfo
 
+# Prisma CLI artifacts (compiled from prisma.config.ts)
+apps/backend/prisma.config.js
+apps/backend/prisma.config.js.map
+apps/backend/prisma.config.d.ts
+
 # Environment
 .env
 .env.local
