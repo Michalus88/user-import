@@ -1,6 +1,7 @@
 import { parseCsv } from './csv-import.parser';
 import {
   IMPORT_ERROR_CODES,
+  InvalidEncodingError,
   MalformedCsvError,
   RowCountExceededError,
 } from './csv-import.errors';
@@ -187,6 +188,47 @@ describe('parseCsv', () => {
   });
 
   describe('encoding and line endings', () => {
+    it('rejects non-UTF-8 buffer with InvalidEncodingError', () => {
+      const win1250Bytes = Buffer.from([
+        0x75,
+        0x73,
+        0x65,
+        0x72,
+        0x6e,
+        0x61,
+        0x6d,
+        0x65,
+        0x2c,
+        0x65,
+        0x6d,
+        0x61,
+        0x69,
+        0x6c,
+        0x0a,
+        0xa3,
+        0x75,
+        0x6b,
+        0x61,
+        0x73,
+        0x7a,
+        0x2c,
+        0x6c,
+        0x40,
+        0x78,
+        0x2e,
+        0x63,
+        0x6f,
+        0x6d,
+      ]);
+      expect(() => parseCsv(win1250Bytes)).toThrow(InvalidEncodingError);
+    });
+
+    it('accepts a valid UTF-8 buffer with multibyte characters', () => {
+      const result = parseCsv(csv('username,email\nŁukasz,lukasz@example.com'));
+      expect(result.validRows).toHaveLength(1);
+      expect(result.validRows[0].username).toBe('Łukasz');
+    });
+
     it('strips UTF-8 BOM from Excel-on-Windows CSV exports', () => {
       const result = parseCsv(
         csv('﻿username,email\nalice,alice@example.com'),
@@ -208,6 +250,34 @@ describe('parseCsv', () => {
         csv('username,email\n"Doe, John",john@example.com'),
       );
       expect(result.validRows).toHaveLength(1);
+      expect(result.validRows[0].username).toBe('Doe, John');
+    });
+  });
+
+  describe('delimiter detection', () => {
+    it('accepts semicolon-separated CSV (localized Excel export)', () => {
+      const result = parseCsv(csv('username;email\nalice;alice@example.com'));
+      expect(result.validRows).toEqual([
+        { username: 'alice', email: 'alice@example.com', rowNumber: 2 },
+      ]);
+    });
+
+    it('accepts tab-separated values', () => {
+      const result = parseCsv(csv('username\temail\nalice\talice@example.com'));
+      expect(result.validRows).toHaveLength(1);
+      expect(result.errors).toHaveLength(0);
+    });
+
+    it('falls back to comma when no candidate delimiter is present in header', () => {
+      expect(() => parseCsv(csv('usernameemail\nalicealice'))).toThrow(
+        MalformedCsvError,
+      );
+    });
+
+    it('picks the dominant delimiter when multiple candidates appear', () => {
+      const result = parseCsv(
+        csv('username;email\n"Doe, John";john@example.com'),
+      );
       expect(result.validRows[0].username).toBe('Doe, John');
     });
   });

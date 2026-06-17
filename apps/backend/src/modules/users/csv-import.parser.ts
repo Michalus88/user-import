@@ -1,14 +1,30 @@
+import { isUtf8 } from 'node:buffer';
 import { isEmail } from 'class-validator';
 import { parse } from 'csv-parse/sync';
 import { ImportRowError } from '@shared/types';
 import {
   IMPORT_ERROR_CODES,
+  InvalidEncodingError,
   MalformedCsvError,
   RowCountExceededError,
 } from './csv-import.errors';
 
 const MAX_ROWS = 10_000;
 const REQUIRED_HEADERS = ['username', 'email'] as const;
+const CANDIDATE_DELIMITERS = [',', ';', '\t'] as const;
+const DEFAULT_DELIMITER = ',';
+
+function sniffDelimiter(buffer: Buffer): string {
+  const firstLine = buffer.toString('utf-8').split(/\r?\n/, 1)[0] ?? '';
+  let best = { delimiter: DEFAULT_DELIMITER, count: 0 };
+  for (const delimiter of CANDIDATE_DELIMITERS) {
+    const count = firstLine.split(delimiter).length - 1;
+    if (count > best.count) {
+      best = { delimiter, count };
+    }
+  }
+  return best.delimiter;
+}
 
 export interface ParsedRow {
   username: string;
@@ -24,12 +40,19 @@ export interface ParseResult {
 }
 
 export function parseCsv(buffer: Buffer): ParseResult {
+  if (!isUtf8(buffer)) {
+    throw new InvalidEncodingError();
+  }
+
   const detectedHeaders: string[] = [];
+
+  const delimiter = sniffDelimiter(buffer);
 
   let records: Record<string, string>[];
   try {
     records = parse(buffer, {
       bom: true,
+      delimiter,
       columns: (headers: string[]) => {
         detectedHeaders.push(...headers);
         return headers;
