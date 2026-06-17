@@ -1,6 +1,7 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Prisma, User } from '@prisma/client';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UserAlreadyExistsError } from './users.errors';
 import { UsersRepository } from './users.repository';
 
 const PAGE_SIZE = 50;
@@ -24,7 +25,7 @@ export class UsersService {
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === 'P2002'
       ) {
-        throw new ConflictException({ code: 'EMAIL_ALREADY_EXISTS' });
+        throw new UserAlreadyExistsError(dto.email);
       }
       throw error;
     }

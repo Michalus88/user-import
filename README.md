@@ -47,5 +47,5 @@ context/
 - Dokumentacja workflow agenta (`context/specs`, `context/rules*.md`) — po angielsku
 - Kod, nazwy plików, identyfikatory — po angielsku
 - Commit messages — Conventional Commits po angielsku
-- Kody błędów API — po angielsku (`INVALID_EMAIL`, `DUPLICATE_IN_FILE`)
+- Kody błędów API — po angielsku (`USER_ALREADY_EXISTS`)
 - Teksty UI dla użytkownika — po polsku

@@ -58,11 +58,17 @@ apps/backend/
     migrations/             — wygenerowane przez prisma migrate
   src/
     main.ts, app.module.ts
-    config/                 — AppConfig + ConfigModule (walidacja env)
-    database/               — DatabaseModule + DatabaseService (extends PrismaClient)
+    common/
+      config/               — AppConfig + ConfigModule (walidacja env)
+      database/             — DatabaseModule + DatabaseService (extends PrismaClient)
+      errors/
+        domain-error.ts         — DomainError base class
+        domain-error-http-map.ts — mapowanie domenowych błędów na kody HTTP
+        domain-error.filter.ts  — globalny ExceptionFilter
     modules/                — feature modules
       users/
         dto/
+        users.errors.ts     — domenowe błędy modułu
         users.module.ts
         users.controller.ts
         users.service.ts    — business logic
@@ -72,7 +78,7 @@ apps/backend/
 Reguły:
 - Każdy feature module żyje w `src/modules/<feature>/`. Plik repository jest obowiązkowy — service NIE wywołuje `DatabaseService` bezpośrednio, tylko przez repository. To jedyna warstwa stykająca się z ORM.
 - Dane wejściowe walidowane przez DTO z `class-validator` + globalny `ValidationPipe`.
-- Mapowanie błędów: Prisma `P2002` (unique constraint) → `ConflictException` z czytelnym `code` w body. Nie sprawdzać istnienia przed `INSERT` (race condition).
+- Mapowanie błędów: Prisma `P2002` (unique constraint) → błąd domenowy (`UserAlreadyExistsError`), mapowany globalnie w `DomainExceptionFilter` na `409 Conflict` z czytelnym `code` w body. Nie sprawdzać istnienia przed `INSERT` (race condition).
 - Migracje: `prisma migrate dev` w trybie dev; schema żyje w `apps/backend/prisma/schema.prisma`.
 - Typy odpowiedzi: korzystamy z auto-generowanych typów Prismy (`User` z `@prisma/client`); nie duplikujemy ich jako interfejsów.
 - Endpoint `GET /users` zwraca `{ users, total, page, pageSize }`, nie samą tablicę — wymagane do UI paginacji. Default `pageSize = 50`.

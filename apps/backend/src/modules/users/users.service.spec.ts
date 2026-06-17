@@ -1,6 +1,6 @@
-import { ConflictException } from '@nestjs/common';
 import { Prisma, User } from '@prisma/client';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UserAlreadyExistsError } from './users.errors';
 import { UsersRepository } from './users.repository';
 import { UsersService } from './users.service';
 
@@ -40,22 +40,14 @@ describe('UsersService', () => {
       expect(repo.create).toHaveBeenCalledWith(dto);
     });
 
-    it('throws ConflictException with EMAIL_ALREADY_EXISTS code on P2002', async () => {
+    it('throws UserAlreadyExistsError on P2002', async () => {
       const p2002 = new Prisma.PrismaClientKnownRequestError('Unique constraint', {
         code: 'P2002',
         clientVersion: '0',
       });
       repo.create.mockRejectedValue(p2002);
 
-      await expect(service.create(dto)).rejects.toThrow(ConflictException);
-
-      try {
-        await service.create(dto);
-      } catch (e) {
-        expect((e as ConflictException).getResponse()).toMatchObject({
-          code: 'EMAIL_ALREADY_EXISTS',
-        });
-      }
+      await expect(service.create(dto)).rejects.toThrow(UserAlreadyExistsError);
     });
 
     it('re-throws unexpected errors', async () => {
