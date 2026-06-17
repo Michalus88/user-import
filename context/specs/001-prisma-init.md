@@ -28,11 +28,11 @@ Set up Prisma as the backend ORM and define the initial `User` model so the Nest
 
 ## Acceptance Criteria / Progress Checklist
 
-- [ ] Prisma schema includes the `User` model
-- [ ] Initial migration is created for the current schema
-- [ ] Prisma Client generates without errors
-- [ ] Backend starts with a working database connection
-- [ ] `PrismaService` is available through NestJS dependency injection
+- [x] Prisma schema includes the `User` model
+- [x] Initial migration is created for the current schema
+- [x] Prisma Client generates without errors
+- [x] Backend starts with a working database connection
+- [x] `PrismaService` is available through NestJS dependency injection
 
 ## Out of Scope
 
