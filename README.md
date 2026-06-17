@@ -32,13 +32,16 @@ pnpm --filter backend test
 
 ```
 apps/
-  backend/    NestJS + Prisma
-  frontend/   React + Vite + Tailwind
-ANALIZA.md    analiza biznesowo-techniczna, decyzje
-CLAUDE.md     entry point dla agenta
+  backend/        NestJS + Prisma
+  frontend/       React + Vite + Tailwind
+packages/
+  types/          współdzielone typy DTO/odpowiedzi (source-only, bez buildu)
+  constants/      współdzielone stałe runtime (np. regex walidacji loginu) — build przez tsc
+ANALIZA.md        analiza biznesowo-techniczna, decyzje
+CLAUDE.md         entry point dla agenta
 context/
-  specs/      feature specs (workflow)
-  rules*.md   reguły pracy agenta
+  specs/          feature specs (workflow)
+  rules*.md       reguły pracy agenta
 ```
 
 ## Konwencje
