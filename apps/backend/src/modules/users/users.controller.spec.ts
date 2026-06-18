@@ -1,9 +1,7 @@
-import {
-  BadRequestException,
-  UnprocessableEntityException,
-} from '@nestjs/common';
+import { UnprocessableEntityException } from '@nestjs/common';
 import { IMPORT_ERROR_CODES } from '@shared/constants';
 import { ImportResult } from '@shared/types';
+import { FileMissingError } from './csv-import.errors';
 import { CsvImportService } from './csv-import.service';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
@@ -98,16 +96,14 @@ describe('UsersController.importCsv', () => {
     }
   });
 
-  it('throws 400 FILE_MISSING when no file is uploaded', async () => {
+  it('throws FILE_MISSING when no file is uploaded', async () => {
     await expect(
       controller.importCsv(undefined as unknown as Express.Multer.File),
-    ).rejects.toBeInstanceOf(BadRequestException);
+    ).rejects.toBeInstanceOf(FileMissingError);
 
     await expect(
       controller.importCsv(undefined as unknown as Express.Multer.File),
-    ).rejects.toMatchObject({
-      response: { code: 'FILE_MISSING', message: 'No CSV file uploaded' },
-    });
+    ).rejects.toMatchObject({ code: 'FILE_MISSING' });
 
     expect(csvImport.import).not.toHaveBeenCalled();
   });
