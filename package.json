@@ -13,8 +13,10 @@
     "test:fe": "pnpm --filter frontend test",
     "test:be": "pnpm --filter backend test",
     "test": "pnpm test:be && pnpm test:fe",
+    "db:generate": "pnpm --filter backend db:generate",
     "db:migrate:deploy": "pnpm --filter backend db:migrate:deploy",
-    "db:migrate:dev": "pnpm --filter backend db:migrate:dev"
+    "db:migrate:dev": "pnpm --filter backend db:migrate:dev",
+    "db:setup": "pnpm db:generate && pnpm db:migrate:deploy"
   },
   "devDependencies": {
     "concurrently": "^9.0.0"
