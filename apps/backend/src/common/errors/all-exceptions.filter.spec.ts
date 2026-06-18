@@ -5,6 +5,7 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { AllExceptionsFilter } from './all-exceptions.filter';
 
 const mockResponse = () => ({
@@ -105,6 +106,59 @@ describe('AllExceptionsFilter', () => {
     );
 
     expect(errorSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('maps PrismaClientInitializationError to HTTP 500 and logs database unavailable', () => {
+    const res = mockResponse();
+    const exception = new Prisma.PrismaClientInitializationError('connect ECONNREFUSED', '7.0.0');
+    filter.catch(exception, mockHost(res, { method: 'POST', url: '/api/users' }));
+
+    expect(res.status).toHaveBeenCalledWith(HttpStatus.INTERNAL_SERVER_ERROR);
+    expect(res.json).toHaveBeenCalledWith({
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      code: 'INTERNAL_ERROR',
+      message: 'Internal server error',
+    });
+    expect(errorSpy).toHaveBeenCalledTimes(1);
+    expect(errorSpy.mock.calls[0][0]).toContain('Database unavailable');
+  });
+
+  it('maps PrismaClientKnownRequestError with connectivity code to HTTP 500 and logs database unavailable', () => {
+    const res = mockResponse();
+    const exception = new Prisma.PrismaClientKnownRequestError('connect ECONNREFUSED', {
+      code: 'ECONNREFUSED',
+      clientVersion: '7.0.0',
+    });
+    filter.catch(exception, mockHost(res, { method: 'POST', url: '/api/users' }));
+
+    expect(res.status).toHaveBeenCalledWith(HttpStatus.INTERNAL_SERVER_ERROR);
+    expect(res.json).toHaveBeenCalledWith({
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      code: 'INTERNAL_ERROR',
+      message: 'Internal server error',
+    });
+    expect(errorSpy).toHaveBeenCalledTimes(1);
+    expect(errorSpy.mock.calls[0][0]).toContain('Database unavailable');
+    expect(errorSpy.mock.calls[0][0]).toContain('ECONNREFUSED');
+  });
+
+  it('maps PrismaClientKnownRequestError with unknown code to HTTP 500 and logs unhandled Prisma error', () => {
+    const res = mockResponse();
+    const exception = new Prisma.PrismaClientKnownRequestError('something broke', {
+      code: 'P9999',
+      clientVersion: '7.0.0',
+    });
+    filter.catch(exception, mockHost(res, { method: 'POST', url: '/api/users' }));
+
+    expect(res.status).toHaveBeenCalledWith(HttpStatus.INTERNAL_SERVER_ERROR);
+    expect(res.json).toHaveBeenCalledWith({
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      code: 'INTERNAL_ERROR',
+      message: 'Internal server error',
+    });
+    expect(errorSpy).toHaveBeenCalledTimes(1);
+    expect(errorSpy.mock.calls[0][0]).toContain('Unhandled Prisma error');
+    expect(errorSpy.mock.calls[0][0]).toContain('P9999');
   });
 
   it('wraps a string HttpException body into a statusCode envelope', () => {

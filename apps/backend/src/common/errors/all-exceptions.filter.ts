@@ -6,7 +6,21 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { Request, Response } from 'express';
+
+const DB_CONNECTIVITY_CODES = new Set([
+  'P1001',
+  'P1002',
+  'P1008',
+  'P1017',
+  'P2021',
+  'P2024',
+  'ECONNREFUSED',
+  'ETIMEDOUT',
+  'ENOTFOUND',
+  'ECONNRESET',
+]);
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -16,6 +30,19 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
+
+    if (exception instanceof Prisma.PrismaClientInitializationError) {
+      this.logger.error(`Database unavailable on ${request.method} ${request.url}`);
+      return this.replyInternalError(response);
+    }
+
+    if (exception instanceof Prisma.PrismaClientKnownRequestError) {
+      const label = DB_CONNECTIVITY_CODES.has(exception.code)
+        ? 'Database unavailable'
+        : 'Unhandled Prisma error';
+      this.logger.error(`${label} [${exception.code}] on ${request.method} ${request.url}`);
+      return this.replyInternalError(response);
+    }
 
     const status =
       exception instanceof HttpException
@@ -41,8 +68,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
       return;
     }
 
-    response.status(status).json({
-      statusCode: status,
+    this.replyInternalError(response);
+  }
+
+  private replyInternalError(response: Response): void {
+    response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
       code: 'INTERNAL_ERROR',
       message: 'Internal server error',
     });
