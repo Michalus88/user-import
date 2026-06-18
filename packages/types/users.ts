@@ -9,3 +9,10 @@ export interface IUser {
   email: string;
   createdAt: string;
 }
+
+export interface IUserListResponse {
+  users: IUser[];
+  total: number;
+  page: number;
+  pageSize: number;
+}

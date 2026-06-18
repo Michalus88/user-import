@@ -2,9 +2,11 @@
   "name": "user-import",
   "private": true,
   "scripts": {
+    "build:packages": "pnpm --filter \"@shared/*\" -r build",
+    "dev:packages": "pnpm --filter \"@shared/constants\" dev",
     "dev:frontend": "pnpm --filter frontend dev",
     "dev:backend": "pnpm --filter backend start:dev",
-    "dev": "concurrently \"pnpm dev:backend\" \"pnpm dev:frontend\"",
+    "dev": "pnpm build:packages && concurrently \"pnpm dev:packages\" \"pnpm dev:backend\" \"pnpm dev:frontend\"",
     "lint:frontend": "pnpm --filter frontend lint",
     "lint:backend": "pnpm --filter backend lint",
     "lint": "pnpm lint:backend && pnpm lint:frontend"
