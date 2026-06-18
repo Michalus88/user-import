@@ -1,10 +1,9 @@
 import { isUtf8 } from 'node:buffer';
 import { isEmail } from 'class-validator';
 import { parse } from 'csv-parse/sync';
-import { USERNAME_REGEX } from '@shared/constants';
+import { IMPORT_ERROR_CODES, USERNAME_REGEX } from '@shared/constants';
 import { ImportRowError } from '@shared/types';
 import {
-  IMPORT_ERROR_CODES,
   InvalidEncodingError,
   MalformedCsvError,
   RowCountExceededError,

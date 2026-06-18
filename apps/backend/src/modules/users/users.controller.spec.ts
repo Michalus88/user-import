@@ -2,6 +2,7 @@ import {
   BadRequestException,
   UnprocessableEntityException,
 } from '@nestjs/common';
+import { IMPORT_ERROR_CODES } from '@shared/constants';
 import { ImportResult } from '@shared/types';
 import { CsvImportService } from './csv-import.service';
 import { UsersController } from './users.controller';
@@ -40,7 +41,7 @@ describe('UsersController.importCsv', () => {
       skipped: 1,
       total: 2,
       errors: [
-        { row: 3, field: 'email', code: 'EMAIL_INVALID', message: 'bad' },
+        { row: 3, field: 'email', code: IMPORT_ERROR_CODES.EMAIL_INVALID, message: 'bad' },
       ],
     };
     csvImport.import.mockResolvedValue(result);
@@ -54,7 +55,7 @@ describe('UsersController.importCsv', () => {
       skipped: 1,
       total: 1,
       errors: [
-        { row: 2, field: 'email', code: 'EMAIL_INVALID', message: 'bad' },
+        { row: 2, field: 'email', code: IMPORT_ERROR_CODES.EMAIL_INVALID, message: 'bad' },
       ],
     };
     csvImport.import.mockResolvedValue(result);
