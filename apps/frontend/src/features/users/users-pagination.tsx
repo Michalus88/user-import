@@ -1,5 +1,5 @@
 import { useState, type KeyboardEvent, type ChangeEvent } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface UsersPaginationProps {
@@ -11,26 +11,15 @@ interface UsersPaginationProps {
   onPageChange: (next: number) => void;
 }
 
-const MAX_VISIBLE = 5;
+const WINDOW_SIZE = 3;
 
-function getPageWindow(page: number, totalPages: number): (number | 'ellipsis')[] {
-  if (totalPages <= MAX_VISIBLE) {
+function getPageWindow(page: number, totalPages: number): number[] {
+  if (totalPages <= WINDOW_SIZE) {
     return Array.from({ length: totalPages }, (_, index) => index + 1);
   }
-  const items: (number | 'ellipsis')[] = [1];
-  const inner = [page - 1, page, page + 1].filter(
-    (n) => n > 1 && n < totalPages,
-  );
-  if (inner[0] !== undefined && inner[0] > 2) items.push('ellipsis');
-  for (const n of inner) items.push(n);
-  if (
-    inner[inner.length - 1] !== undefined &&
-    (inner[inner.length - 1] as number) < totalPages - 1
-  ) {
-    items.push('ellipsis');
-  }
-  items.push(totalPages);
-  return items;
+  if (page <= 1) return [1, 2, 3];
+  if (page >= totalPages) return [totalPages - 2, totalPages - 1, totalPages];
+  return [page - 1, page, page + 1];
 }
 
 export function UsersPagination({
@@ -74,32 +63,29 @@ export function UsersPagination({
         <div className="flex items-center gap-0.5">
           <PageBtn
             disabled={page <= 1}
+            onClick={() => onPageChange(1)}
+            aria-label="First page"
+          >
+            <ChevronsLeft className="h-3.5 w-3.5" />
+          </PageBtn>
+          <PageBtn
+            disabled={page <= 1}
             onClick={() => onPageChange(page - 1)}
             aria-label="Previous page"
           >
             <ChevronLeft className="h-3.5 w-3.5" />
           </PageBtn>
 
-          {pageWindow.map((item, index) =>
-            item === 'ellipsis' ? (
-              <span
-                key={`ellipsis-${index}`}
-                className="flex h-8 w-8 items-center justify-center font-mono text-xs text-subtle"
-                aria-hidden
-              >
-                …
-              </span>
-            ) : (
-              <PageBtn
-                key={item}
-                active={item === page}
-                onClick={() => onPageChange(item)}
-                aria-current={item === page ? 'page' : undefined}
-              >
-                {item}
-              </PageBtn>
-            ),
-          )}
+          {pageWindow.map((item) => (
+            <PageBtn
+              key={item}
+              active={item === page}
+              onClick={() => onPageChange(item)}
+              aria-current={item === page ? 'page' : undefined}
+            >
+              {item}
+            </PageBtn>
+          ))}
 
           <PageBtn
             disabled={page >= totalPages}
@@ -107,6 +93,13 @@ export function UsersPagination({
             aria-label="Next page"
           >
             <ChevronRight className="h-3.5 w-3.5" />
+          </PageBtn>
+          <PageBtn
+            disabled={page >= totalPages}
+            onClick={() => onPageChange(totalPages)}
+            aria-label="Last page"
+          >
+            <ChevronsRight className="h-3.5 w-3.5" />
           </PageBtn>
         </div>
 
