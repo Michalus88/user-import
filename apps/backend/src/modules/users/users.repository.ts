@@ -20,7 +20,7 @@ export class UsersRepository {
     take: number,
   ): Promise<{ users: User[]; total: number }> {
     const [users, total] = await this.db.$transaction([
-      this.db.user.findMany({ skip, take, orderBy: { id: 'asc' } }),
+      this.db.user.findMany({ skip, take, orderBy: { id: 'desc' } }),
       this.db.user.count(),
     ]);
     return { users, total };
