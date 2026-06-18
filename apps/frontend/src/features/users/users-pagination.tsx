@@ -1,5 +1,5 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState, type KeyboardEvent, type ChangeEvent } from 'react';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface UsersPaginationProps {
@@ -11,26 +11,15 @@ interface UsersPaginationProps {
   onPageChange: (next: number) => void;
 }
 
-const MAX_VISIBLE = 5;
+const WINDOW_SIZE = 3;
 
-function getPageWindow(page: number, totalPages: number): (number | 'ellipsis')[] {
-  if (totalPages <= MAX_VISIBLE) {
+function getPageWindow(page: number, totalPages: number): number[] {
+  if (totalPages <= WINDOW_SIZE) {
     return Array.from({ length: totalPages }, (_, index) => index + 1);
   }
-  const items: (number | 'ellipsis')[] = [1];
-  const inner = [page - 1, page, page + 1].filter(
-    (n) => n > 1 && n < totalPages,
-  );
-  if (inner[0] !== undefined && inner[0] > 2) items.push('ellipsis');
-  for (const n of inner) items.push(n);
-  if (
-    inner[inner.length - 1] !== undefined &&
-    (inner[inner.length - 1] as number) < totalPages - 1
-  ) {
-    items.push('ellipsis');
-  }
-  items.push(totalPages);
-  return items;
+  if (page <= 1) return [1, 2, 3];
+  if (page >= totalPages) return [totalPages - 2, totalPages - 1, totalPages];
+  return [page - 1, page, page + 1];
 }
 
 export function UsersPagination({
@@ -41,59 +30,141 @@ export function UsersPagination({
   total,
   onPageChange,
 }: UsersPaginationProps) {
-  const window = getPageWindow(page, totalPages);
+  const [goToValue, setGoToValue] = useState('');
+
+  const pageWindow = getPageWindow(page, totalPages);
+
+  function handleGoToChange(e: ChangeEvent<HTMLInputElement>) {
+    setGoToValue(e.target.value);
+  }
+
+  function handleGoToSubmit() {
+    const parsed = parseInt(goToValue, 10);
+    if (!isNaN(parsed) && parsed >= 1 && parsed <= totalPages) {
+      onPageChange(parsed);
+      setGoToValue('');
+    }
+  }
+
+  function handleGoToKeyDown(e: KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Enter') handleGoToSubmit();
+  }
 
   return (
-    <div className="flex flex-col gap-3 border-t border-border/60 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-      <p className="text-xs text-muted-foreground">
-        Showing {rangeStart}-{rangeEnd} of {total}
-      </p>
-      <div className="flex items-center gap-1">
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label="Previous page"
-          disabled={page <= 1}
-          onClick={() => onPageChange(page - 1)}
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-        {window.map((item, index) =>
-          item === 'ellipsis' ? (
-            <span
-              key={`ellipsis-${index}`}
-              className="px-2 text-sm text-muted-foreground"
-              aria-hidden
-            >
-              …
-            </span>
-          ) : (
-            <Button
+    <div className="flex flex-shrink-0 items-center justify-between border-t border-border bg-background px-5 py-[11px]">
+      <span className="font-mono text-[11px] text-subtle">
+        {total > 0
+          ? `Showing ${rangeStart}–${rangeEnd} of ${total.toLocaleString()}`
+          : ''}
+      </span>
+
+      <div className="flex items-center gap-1.5">
+        {/* Page buttons */}
+        <div className="flex items-center gap-0.5">
+          <PageBtn
+            disabled={page <= 1}
+            onClick={() => onPageChange(1)}
+            aria-label="First page"
+          >
+            <ChevronsLeft className="h-3.5 w-3.5" />
+          </PageBtn>
+          <PageBtn
+            disabled={page <= 1}
+            onClick={() => onPageChange(page - 1)}
+            aria-label="Previous page"
+          >
+            <ChevronLeft className="h-3.5 w-3.5" />
+          </PageBtn>
+
+          {pageWindow.map((item) => (
+            <PageBtn
               key={item}
-              variant="ghost"
-              size="icon"
+              active={item === page}
               onClick={() => onPageChange(item)}
-              className={cn(
-                'text-sm',
-                item === page &&
-                  'bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground',
-              )}
               aria-current={item === page ? 'page' : undefined}
             >
               {item}
-            </Button>
-          ),
-        )}
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label="Next page"
-          disabled={page >= totalPages}
-          onClick={() => onPageChange(page + 1)}
-        >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
+            </PageBtn>
+          ))}
+
+          <PageBtn
+            disabled={page >= totalPages}
+            onClick={() => onPageChange(page + 1)}
+            aria-label="Next page"
+          >
+            <ChevronRight className="h-3.5 w-3.5" />
+          </PageBtn>
+          <PageBtn
+            disabled={page >= totalPages}
+            onClick={() => onPageChange(totalPages)}
+            aria-label="Last page"
+          >
+            <ChevronsRight className="h-3.5 w-3.5" />
+          </PageBtn>
+        </div>
+
+        {/* Separator */}
+        <div className="mx-2 h-5 w-px bg-border" />
+
+        {/* Go to */}
+        <span className="mr-1.5 text-xs text-muted-foreground">Go to</span>
+        <div className="flex h-8">
+          <input
+            type="number"
+            min={1}
+            max={totalPages}
+            value={goToValue}
+            onChange={handleGoToChange}
+            onKeyDown={handleGoToKeyDown}
+            onFocus={(e) => e.target.select()}
+            placeholder="—"
+            aria-label={`Go to page, 1 to ${totalPages}`}
+            className="w-[52px] rounded-l-lg border border-border border-r-0 bg-white px-2 text-center font-mono text-sm text-foreground outline-none transition-all focus:border-primary focus:shadow-[0_0_0_3px_rgba(124,58,237,0.12)]"
+          />
+          <button
+            type="button"
+            onClick={handleGoToSubmit}
+            className="rounded-r-lg bg-primary px-3 font-sans text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary-hover"
+          >
+            Go
+          </button>
+        </div>
       </div>
     </div>
+  );
+}
+
+function PageBtn({
+  children,
+  active,
+  disabled,
+  onClick,
+  'aria-label': ariaLabel,
+  'aria-current': ariaCurrent,
+}: {
+  children: React.ReactNode;
+  active?: boolean;
+  disabled?: boolean;
+  onClick?: () => void;
+  'aria-label'?: string;
+  'aria-current'?: 'page' | undefined;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      aria-label={ariaLabel}
+      aria-current={ariaCurrent}
+      className={cn(
+        'flex h-8 min-w-8 items-center justify-center rounded-lg border border-transparent px-1.5 font-mono text-[13px] font-medium transition-all',
+        active
+          ? 'cursor-default bg-primary text-primary-foreground'
+          : 'text-foreground hover:border-primary-mid hover:bg-primary-soft hover:text-primary',
+        disabled && 'cursor-not-allowed opacity-30',
+      )}
+    >
+      {children}
+    </button>
   );
 }

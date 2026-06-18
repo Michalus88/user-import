@@ -12,7 +12,7 @@ export function UserAvatar({ username, email, className }: UserAvatarProps) {
   return (
     <div
       className={cn(
-        'flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold',
+        'flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-[10px] font-syne text-[11px] font-bold tracking-[0.03em]',
         color.bg,
         color.text,
         className,

@@ -1,9 +1,6 @@
 import { useState, type FormEvent } from 'react';
-import { Mail, User, UserPlus } from 'lucide-react';
+import { Mail, User } from 'lucide-react';
 import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { USERNAME_REGEX } from '@shared/constants';
 import { useCreateUser } from './use-users';
 import { EMAIL_REGEX } from './utils';
@@ -74,16 +71,21 @@ export function AddUserForm({ onCreated }: AddUserFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-1.5">
-        <Label htmlFor="add-user-email">Email</Label>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
+      <div className="flex flex-col gap-1.5">
+        <label
+          htmlFor="add-user-email"
+          className="text-[10px] font-bold uppercase tracking-[0.07em] text-subtle"
+        >
+          Email address *
+        </label>
         <div className="relative h-[3.75rem]">
           <div className="relative">
             <Mail
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+              className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-subtle"
               aria-hidden
             />
-            <Input
+            <input
               id="add-user-email"
               type="email"
               value={email}
@@ -98,10 +100,10 @@ export function AddUserForm({ onCreated }: AddUserFormProps) {
                   setEmailError(validateEmail(email));
                 }
               }}
-              placeholder="jan.kowalski@example.com"
-              className="pl-9"
+              placeholder="jan@example.com"
               autoComplete="off"
               aria-describedby={emailError ? 'add-user-email-error' : undefined}
+              className="w-full rounded-[10px] border border-border bg-background py-2.5 pl-[33px] pr-3 text-sm text-foreground outline-none transition-all focus:border-primary focus:bg-white focus:shadow-[0_0_0_3px_rgba(124,58,237,0.12)]"
             />
           </div>
           <p
@@ -112,15 +114,21 @@ export function AddUserForm({ onCreated }: AddUserFormProps) {
           </p>
         </div>
       </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="add-user-username">Username</Label>
+
+      <div className="flex flex-col gap-1.5">
+        <label
+          htmlFor="add-user-username"
+          className="text-[10px] font-bold uppercase tracking-[0.07em] text-subtle"
+        >
+          Full name *
+        </label>
         <div className="relative h-[3.75rem]">
           <div className="relative">
             <User
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+              className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-subtle"
               aria-hidden
             />
-            <Input
+            <input
               id="add-user-username"
               type="text"
               value={username}
@@ -135,12 +143,12 @@ export function AddUserForm({ onCreated }: AddUserFormProps) {
                   setUsernameError(validateUsername(username));
                 }
               }}
-              placeholder="jan.kowalski"
-              className="pl-9"
+              placeholder="Jan Kowalski"
               autoComplete="off"
               aria-describedby={
                 usernameError ? 'add-user-username-error' : undefined
               }
+              className="w-full rounded-[10px] border border-border bg-background py-2.5 pl-[33px] pr-3 text-sm text-foreground outline-none transition-all focus:border-primary focus:bg-white focus:shadow-[0_0_0_3px_rgba(124,58,237,0.12)]"
             />
           </div>
           <p
@@ -151,14 +159,15 @@ export function AddUserForm({ onCreated }: AddUserFormProps) {
           </p>
         </div>
       </div>
-      <Button
+
+      <button
         type="submit"
-        className="w-full"
         disabled={mutation.isPending}
+        className="flex w-full items-center justify-center gap-2 rounded-[10px] bg-primary py-[11px] font-syne text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
       >
-        <UserPlus className="h-4 w-4" />
+        <span className="text-base leading-none">+</span>
         Add User
-      </Button>
+      </button>
     </form>
   );
 }

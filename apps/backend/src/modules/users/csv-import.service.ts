@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { IMPORT_ERROR_CODES } from '@shared/constants';
 import { ImportResult, ImportRowError } from '@shared/types';
 import { parseCsv, ParsedRow } from './csv-import.parser';
-import { IMPORT_ERROR_CODES } from './csv-import.errors';
 import { UsersRepository } from './users.repository';
 
 @Injectable()

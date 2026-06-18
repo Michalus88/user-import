@@ -71,18 +71,18 @@ describe('UsersService', () => {
 
       const result = await service.findAll(1);
 
-      expect(result).toEqual({ users, total: 1, page: 1, pageSize: 50 });
-      expect(repo.findAll).toHaveBeenCalledWith(0, 50);
+      expect(result).toEqual({ users, total: 1, page: 1, pageSize: 10 });
+      expect(repo.findAll).toHaveBeenCalledWith(0, 10);
     });
 
     it('calculates correct skip for non-default page', async () => {
-      const users = [mockUser({ id: 51 })];
-      repo.findAll.mockResolvedValue({ users, total: 60 });
+      const users = [mockUser({ id: 11 })];
+      repo.findAll.mockResolvedValue({ users, total: 20 });
 
       const result = await service.findAll(2);
 
-      expect(result).toEqual({ users, total: 60, page: 2, pageSize: 50 });
-      expect(repo.findAll).toHaveBeenCalledWith(50, 50);
+      expect(result).toEqual({ users, total: 20, page: 2, pageSize: 10 });
+      expect(repo.findAll).toHaveBeenCalledWith(10, 10);
     });
 
     it('returns empty users array when page exceeds total', async () => {
