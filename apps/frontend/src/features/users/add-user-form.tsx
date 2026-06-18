@@ -18,17 +18,17 @@ interface AddUserFormProps {
 
 function validateUsername(value: string): string | null {
   if (value.trim().length === 0) return null;
-  if (value.trim().length < USERNAME_MIN_LENGTH) return 'Username must be at least 3 characters';
-  if (value.trim().length > USERNAME_MAX_LENGTH) return `Username must be at most ${USERNAME_MAX_LENGTH} characters`;
+  if (value.trim().length < USERNAME_MIN_LENGTH) return 'Nazwa musi mieć co najmniej 3 znaki';
+  if (value.trim().length > USERNAME_MAX_LENGTH) return `Nazwa może mieć maksymalnie ${USERNAME_MAX_LENGTH} znaków`;
   if (!USERNAME_REGEX.test(value.trim()))
-    return 'Username may only contain letters, digits and spaces';
+    return 'Nazwa może zawierać tylko litery, cyfry i spacje';
   return null;
 }
 
 function validateEmail(value: string): string | null {
   if (value.trim().length === 0) return null;
-  if (value.trim().length > EMAIL_MAX_LENGTH) return `Email must be at most ${EMAIL_MAX_LENGTH} characters`;
-  if (!EMAIL_REGEX.test(value.trim())) return 'Enter a valid email address';
+  if (value.trim().length > EMAIL_MAX_LENGTH) return `E-mail może mieć maksymalnie ${EMAIL_MAX_LENGTH} znaków`;
+  if (!EMAIL_REGEX.test(value.trim())) return 'Podaj poprawny adres e-mail';
   return null;
 }
 
@@ -48,7 +48,7 @@ export function AddUserForm({ onCreated }: AddUserFormProps) {
 
   const mutation = useCreateUser({
     onSuccess: (user) => {
-      toast.success(`User "${user.username}" added successfully`);
+      toast.success(`Użytkownik "${user.username}" został dodany`);
       setEmail('');
       setUsername('');
       setUsernameError(null);
@@ -57,14 +57,14 @@ export function AddUserForm({ onCreated }: AddUserFormProps) {
     },
     onError: (error) => {
       if (error.code === USER_ALREADY_EXISTS) {
-        toast.error(`Email ${trimmedEmail} already exists`);
+        toast.error(`E-mail ${trimmedEmail} już istnieje`);
         return;
       }
       if (error.status === 400) {
-        toast.error(error.message || 'Validation error');
+        toast.error(error.message || 'Błąd walidacji');
         return;
       }
-      toast.error('Something went wrong');
+      toast.error('Coś poszło nie tak');
     },
   });
 
@@ -73,9 +73,9 @@ export function AddUserForm({ onCreated }: AddUserFormProps) {
     const uErr = validateUsername(trimmedUsername.length === 0 ? ' ' : username);
     const eErr = validateEmail(trimmedEmail.length === 0 ? ' ' : email);
     setUsernameError(
-      trimmedUsername.length === 0 ? 'Username is required' : uErr,
+      trimmedUsername.length === 0 ? 'Nazwa jest wymagana' : uErr,
     );
-    setEmailError(trimmedEmail.length === 0 ? 'Email is required' : eErr);
+    setEmailError(trimmedEmail.length === 0 ? 'E-mail jest wymagany' : eErr);
     if (!isValid || mutation.isPending) return;
     mutation.mutate({ username: trimmedUsername, email: trimmedEmail });
   }
@@ -87,7 +87,7 @@ export function AddUserForm({ onCreated }: AddUserFormProps) {
           htmlFor="add-user-email"
           className="text-[10px] font-bold uppercase tracking-[0.07em] text-subtle"
         >
-          Email address *
+          Adres e-mail *
         </label>
         <div className="relative h-[3.75rem]">
           <div className="relative">
@@ -106,7 +106,7 @@ export function AddUserForm({ onCreated }: AddUserFormProps) {
               }}
               onBlur={() => {
                 if (trimmedEmail.length === 0) {
-                  setEmailError('Email is required');
+                  setEmailError('E-mail jest wymagany');
                 } else {
                   setEmailError(validateEmail(email));
                 }
@@ -131,7 +131,7 @@ export function AddUserForm({ onCreated }: AddUserFormProps) {
           htmlFor="add-user-username"
           className="text-[10px] font-bold uppercase tracking-[0.07em] text-subtle"
         >
-          Full name *
+          Nazwa użytkownika *
         </label>
         <div className="relative h-[3.75rem]">
           <div className="relative">
@@ -150,7 +150,7 @@ export function AddUserForm({ onCreated }: AddUserFormProps) {
               }}
               onBlur={() => {
                 if (trimmedUsername.length === 0) {
-                  setUsernameError('Username is required');
+                  setUsernameError('Nazwa jest wymagana');
                 } else {
                   setUsernameError(validateUsername(username));
                 }
@@ -178,7 +178,7 @@ export function AddUserForm({ onCreated }: AddUserFormProps) {
         className="flex w-full items-center justify-center gap-2 rounded-[10px] bg-primary py-[11px] font-syne text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
       >
         <span className="text-base leading-none">+</span>
-        Add User
+        Dodaj użytkownika
       </button>
     </form>
   );

@@ -69,26 +69,26 @@ export function useCsvImport(options?: UseCsvImportOptions): CsvImportState {
         void queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY] });
         options?.onImported?.();
       }
-      toast.success(`Imported ${data.inserted} users. Skipped: ${data.skipped}.`);
+      toast.success(`Zaimportowano ${data.inserted} użytkowników. Pominięto: ${data.skipped}.`);
     },
     onError: (error) => {
       if (error.status === 422) {
         const structured = extractImportResult(error);
         if (structured) {
           setResult(structured);
-          toast.error('No users were imported. Check the error report.');
+          toast.error('Nie zaimportowano żadnych użytkowników. Sprawdź raport błędów.');
           return;
         }
       }
       if (error.status === 413) {
-        toast.error(error.message ?? 'File is too large');
+        toast.error(error.message ?? 'Plik jest za duży');
         return;
       }
       if (error.code === 'MALFORMED_CSV') {
-        toast.error('CSV must have "email" and "username" columns');
+        toast.error('Plik CSV musi zawierać kolumny "email" i "username"');
         return;
       }
-      toast.error(error.message ?? 'Something went wrong');
+      toast.error(error.message ?? 'Coś poszło nie tak');
     },
   });
 

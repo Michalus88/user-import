@@ -34,10 +34,10 @@ export function UsersList({
     <>
       {/* Panel header */}
       <div className="flex-shrink-0 border-b border-border px-5 py-4">
-        <div className="font-syne text-[15px] font-bold text-foreground">Users</div>
+        <div className="font-syne text-[15px] font-bold text-foreground">Użytkownicy</div>
         {!isLoading && !isError && (
           <div className="mt-0.5 font-mono text-[11px] text-subtle">
-            {total.toLocaleString()} results · page {page} of {totalPages}
+            {total.toLocaleString()} wyników · strona {page} z {totalPages}
           </div>
         )}
       </div>
@@ -45,23 +45,23 @@ export function UsersList({
       {/* Table area */}
       <div className="flex-1 overflow-hidden">
         {isError ? (
-          <EmptyRows message="Could not load users. Try refreshing." />
+          <EmptyRows message="Nie udało się załadować użytkowników. Spróbuj odświeżyć." />
         ) : isLoading && users.length === 0 ? (
-          <EmptyRows message="Loading users…" />
+          <EmptyRows message="Ładowanie użytkowników…" />
         ) : users.length === 0 ? (
-          <EmptyRows message="No users yet" />
+          <EmptyRows message="Brak użytkowników" />
         ) : (
           <table className="w-full border-collapse">
             <thead>
               <tr className="border-b border-border bg-background">
                 <th className="h-[38px] px-5 text-left text-[10px] font-bold uppercase tracking-[0.08em] text-subtle">
-                  User
+                  Użytkownik
                 </th>
                 <th className="h-[38px] px-5 text-left text-[10px] font-bold uppercase tracking-[0.08em] text-subtle">
-                  Email
+                  E-mail
                 </th>
                 <th className="h-[38px] px-5 text-left text-[10px] font-bold uppercase tracking-[0.08em] text-subtle">
-                  Added
+                  Dodano
                 </th>
               </tr>
             </thead>

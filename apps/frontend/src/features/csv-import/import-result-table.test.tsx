@@ -16,16 +16,16 @@ describe('ImportResultTable', () => {
   it('renders summary counts', () => {
     render(<ImportResultTable result={baseResult} />);
     expect(screen.getByText('5')).toBeInTheDocument();
-    expect(screen.getByText('Inserted')).toBeInTheDocument();
+    expect(screen.getByText('Zapisane')).toBeInTheDocument();
     expect(screen.getByText('2')).toBeInTheDocument();
-    expect(screen.getByText('Skipped')).toBeInTheDocument();
+    expect(screen.getByText('Pominięte')).toBeInTheDocument();
     expect(screen.getByText('7')).toBeInTheDocument();
-    expect(screen.getByText('Total')).toBeInTheDocument();
+    expect(screen.getByText('Razem')).toBeInTheDocument();
   });
 
   it('does not render error table when errors are empty', () => {
     render(<ImportResultTable result={baseResult} />);
-    expect(screen.queryByText(/row errors/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/błędy wierszy/i)).not.toBeInTheDocument();
   });
 
   it('renders error rows when errors are present', () => {
@@ -37,7 +37,7 @@ describe('ImportResultTable', () => {
       ],
     };
     render(<ImportResultTable result={result} />);
-    expect(screen.getByText(/row errors/i)).toBeInTheDocument();
+    expect(screen.getByText(/błędy wierszy/i)).toBeInTheDocument();
     expect(screen.getByText('3')).toBeInTheDocument();
     expect(screen.getAllByText('5').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('email')).toBeInTheDocument();

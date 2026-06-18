@@ -29,14 +29,14 @@ describe('CsvUploadPanel', () => {
 
   it('disables Import button when no file is selected', () => {
     render(<CsvUploadPanel onImported={vi.fn()} />);
-    expect(screen.getByRole('button', { name: /import users/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /importuj użytkowników/i })).toBeDisabled();
   });
 
   it('enables Import button after file is selected', async () => {
     render(<CsvUploadPanel onImported={vi.fn()} />);
     const input = screen.getByTestId('csv-file-input');
     await userEvent.upload(input, csvFile());
-    expect(screen.getByRole('button', { name: /import users/i })).toBeEnabled();
+    expect(screen.getByRole('button', { name: /importuj użytkowników/i })).toBeEnabled();
   });
 
   it('shows filename and size after file selection', async () => {
@@ -50,9 +50,9 @@ describe('CsvUploadPanel', () => {
     render(<CsvUploadPanel onImported={vi.fn()} />);
     const input = screen.getByTestId('csv-file-input');
     await userEvent.upload(input, csvFile());
-    await userEvent.click(screen.getByRole('button', { name: /remove file/i }));
+    await userEvent.click(screen.getByRole('button', { name: /usuń plik/i }));
     expect(screen.queryByText('users.csv')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /import users/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /importuj użytkowników/i })).toBeDisabled();
   });
 
   it('disables Import button and shows loading label while pending', async () => {
@@ -60,7 +60,7 @@ describe('CsvUploadPanel', () => {
     render(<CsvUploadPanel onImported={vi.fn()} />);
     const input = screen.getByTestId('csv-file-input');
     await userEvent.upload(input, csvFile());
-    expect(screen.getByRole('button', { name: /importing/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /importowanie/i })).toBeDisabled();
   });
 
   it('calls mutate with the selected file on Import click', async () => {
@@ -68,7 +68,7 @@ describe('CsvUploadPanel', () => {
     const input = screen.getByTestId('csv-file-input');
     const file = csvFile();
     await userEvent.upload(input, file);
-    await userEvent.click(screen.getByRole('button', { name: /import users/i }));
+    await userEvent.click(screen.getByRole('button', { name: /importuj użytkowników/i }));
     expect(mockMutate).toHaveBeenCalledWith(file);
   });
 
@@ -76,7 +76,7 @@ describe('CsvUploadPanel', () => {
     const result: ImportResult = { inserted: 3, skipped: 1, total: 4, errors: [] };
     mockHook({ result });
     render(<CsvUploadPanel onImported={vi.fn()} />);
-    expect(screen.getByText('Inserted')).toBeInTheDocument();
+    expect(screen.getByText('Zapisane')).toBeInTheDocument();
     expect(screen.getByText('3')).toBeInTheDocument();
   });
 
@@ -89,7 +89,7 @@ describe('CsvUploadPanel', () => {
     };
     mockHook({ result });
     render(<CsvUploadPanel onImported={vi.fn()} />);
-    expect(screen.getByText(/row errors/i)).toBeInTheDocument();
+    expect(screen.getByText(/błędy wierszy/i)).toBeInTheDocument();
     expect(
       screen.getByText(translateErrorCode(IMPORT_ERROR_CODES.EMAIL_INVALID)),
     ).toBeInTheDocument();
@@ -105,6 +105,6 @@ describe('CsvUploadPanel', () => {
     mockHook({ result });
     render(<CsvUploadPanel onImported={vi.fn()} />);
     expect(screen.getByText('0')).toBeInTheDocument();
-    expect(screen.getByText('Inserted')).toBeInTheDocument();
+    expect(screen.getByText('Zapisane')).toBeInTheDocument();
   });
 });
