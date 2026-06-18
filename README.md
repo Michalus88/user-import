@@ -32,7 +32,7 @@ pnpm test:fe        # tylko frontend
 
 ## Przykładowe pliki CSV
 
-W katalogu `samples/` są dwa pliki do testu importu:
+W katalogu `samples/` są trzy pliki do testu importu:
 
 - `users-valid.csv` — 5 poprawnych wierszy (happy path).
 - `users-mixed.csv` — 15 wierszy pokazujących wszystkie typy błędów per wiersz i filtry w raporcie (zła nazwa, zły format emaila, duplikat w pliku, duplikat względem bazy). Najpierw zaimportuj `users-valid.csv`, żeby aktywować filtr „już istnieje".
