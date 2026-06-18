@@ -1,5 +1,6 @@
 import { useMemo, useState, type ChangeEvent, type KeyboardEvent } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { IMPORT_ERROR_CODES, type ImportErrorCode } from '@shared/constants';
 import type { ImportResult } from '@shared/types';
 import { cn } from '@/lib/utils';
 import { translateErrorCode } from './error-code-map';
@@ -11,12 +12,12 @@ interface ImportResultTableProps {
 }
 
 export function ImportResultTable({ result }: ImportResultTableProps) {
-  const [activeCode, setActiveCode] = useState<string | null>(null);
+  const [activeCode, setActiveCode] = useState<ImportErrorCode | null>(null);
   const [errPage, setErrPage] = useState(1);
   const [gotoValue, setGotoValue] = useState('');
 
   const codeCounts = useMemo(() => {
-    const map = new Map<string, number>();
+    const map = new Map<ImportErrorCode, number>();
     for (const e of result.errors) {
       map.set(e.code, (map.get(e.code) ?? 0) + 1);
     }
@@ -38,7 +39,7 @@ export function ImportResultTable({ result }: ImportResultTableProps) {
     clampedPage * ERR_PAGE_SIZE,
   );
 
-  function handleFilterChange(code: string | null) {
+  function handleFilterChange(code: ImportErrorCode | null) {
     setActiveCode(code);
     setErrPage(1);
     setGotoValue('');
@@ -73,7 +74,7 @@ export function ImportResultTable({ result }: ImportResultTableProps) {
             {result.inserted.toLocaleString()}
           </div>
           <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.05em] text-emerald-700">
-            Inserted
+            Zapisane
           </div>
         </div>
         <div className="flex-1 rounded-[10px] border border-amber-200 bg-amber-50 py-2.5 text-center">
@@ -81,7 +82,7 @@ export function ImportResultTable({ result }: ImportResultTableProps) {
             {result.skipped.toLocaleString()}
           </div>
           <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.05em] text-amber-700">
-            Skipped
+            Pominięte
           </div>
         </div>
         <div className="flex-1 rounded-[10px] border border-border bg-background py-2.5 text-center">
@@ -89,7 +90,7 @@ export function ImportResultTable({ result }: ImportResultTableProps) {
             {result.total.toLocaleString()}
           </div>
           <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.05em] text-muted-foreground">
-            Total
+            Razem
           </div>
         </div>
       </div>
@@ -100,7 +101,7 @@ export function ImportResultTable({ result }: ImportResultTableProps) {
           {codeCounts.size > 1 && (
             <div className="flex flex-wrap gap-1.5">
               <ErrorChip
-                label="All"
+                label="Wszystkie"
                 count={result.errors.length}
                 active={activeCode === null}
                 onClick={() => handleFilterChange(null)}
@@ -119,27 +120,27 @@ export function ImportResultTable({ result }: ImportResultTableProps) {
             </div>
           )}
 
-          <p className="sr-only">Row errors ({result.errors.length})</p>
+          <p className="sr-only">Błędy wierszy ({result.errors.length})</p>
 
           {/* Error table */}
           <div className="flex flex-col overflow-hidden rounded-[10px] border border-border">
             <div className="overflow-hidden">
               <table className="w-full border-collapse" style={{ tableLayout: 'fixed' }}>
                 <colgroup>
-                  <col style={{ width: '50px' }} />
-                  <col style={{ width: '50%' }} />
-                  <col style={{ width: '50%' }} />
+                  <col style={{ width: '80px' }} />
+                  <col style={{ width: '30%' }} />
+                  <col />
                 </colgroup>
                 <thead>
                   <tr className="border-b border-border bg-background">
                     <th className="h-[34px] px-3 text-left text-[10px] font-bold uppercase tracking-[0.07em] text-subtle">
-                      Row
+                      Wiersz
                     </th>
                     <th className="h-[34px] px-3 text-left text-[10px] font-bold uppercase tracking-[0.07em] text-subtle">
-                      Field
+                      Pole
                     </th>
                     <th className="h-[34px] px-3 text-left text-[10px] font-bold uppercase tracking-[0.07em] text-subtle">
-                      Error
+                      Błąd
                     </th>
                   </tr>
                 </thead>
@@ -157,6 +158,11 @@ export function ImportResultTable({ result }: ImportResultTableProps) {
                       </td>
                       <td className="overflow-hidden text-ellipsis whitespace-nowrap px-3 text-xs text-foreground">
                         {translateErrorCode(err.code)}
+                        {err.code === IMPORT_ERROR_CODES.EMAIL_DUPLICATE_IN_FILE && (
+                          <span className="ml-1 text-muted-foreground">
+                            (w. {err.relatedRow})
+                          </span>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -169,7 +175,7 @@ export function ImportResultTable({ result }: ImportResultTableProps) {
               <div className="flex h-10 flex-shrink-0 items-center justify-between border-t border-border bg-background px-3">
                 <span className="font-mono text-[11px] text-subtle">
                   {filteredErrors.length > 0
-                    ? `${(clampedPage - 1) * ERR_PAGE_SIZE + 1}–${Math.min(clampedPage * ERR_PAGE_SIZE, filteredErrors.length)} of ${filteredErrors.length.toLocaleString()}`
+                    ? `${(clampedPage - 1) * ERR_PAGE_SIZE + 1}–${Math.min(clampedPage * ERR_PAGE_SIZE, filteredErrors.length)} z ${filteredErrors.length.toLocaleString()}`
                     : ''}
                 </span>
                 <div className="flex items-center gap-1">
@@ -203,7 +209,7 @@ export function ImportResultTable({ result }: ImportResultTableProps) {
                       onKeyDown={handleGotoKeyDown}
                       onFocus={(e) => e.target.select()}
                       placeholder="—"
-                      aria-label={`Go to page, 1 to ${totalErrPages}`}
+                      aria-label={`Idź do strony, od 1 do ${totalErrPages}`}
                       className="w-10 rounded-l-[6px] border border-border border-r-0 bg-white px-1.5 text-center font-mono text-xs text-foreground outline-none transition-all focus:border-primary focus:shadow-[0_0_0_2px_rgba(124,58,237,0.12)]"
                     />
                     <button
@@ -211,7 +217,7 @@ export function ImportResultTable({ result }: ImportResultTableProps) {
                       onClick={handleGotoSubmit}
                       className="rounded-r-[6px] bg-primary px-2.5 text-[11px] font-semibold text-primary-foreground transition-colors hover:bg-primary-hover"
                     >
-                      Go
+                      Idź
                     </button>
                   </div>
                 </div>

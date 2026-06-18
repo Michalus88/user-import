@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { AppConfig } from './common/config/app-config';
+import { AllExceptionsFilter } from './common/errors/all-exceptions.filter';
 import { DomainExceptionFilter } from './common/errors/domain-error.filter';
 
 async function bootstrap() {
@@ -12,7 +13,7 @@ async function bootstrap() {
   app.use(helmet());
   app.enableCors({ origin: CORS_ORIGIN });
   app.setGlobalPrefix('api');
-  app.useGlobalFilters(new DomainExceptionFilter());
+  app.useGlobalFilters(new AllExceptionsFilter(), new DomainExceptionFilter());
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,

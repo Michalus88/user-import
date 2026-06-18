@@ -1,9 +1,8 @@
 import type { IUser } from '@shared/types';
+import { USERS_PAGE_SIZE } from '@shared/constants';
 import { UsersPagination } from './users-pagination';
 import { UserAvatar } from './user-avatar';
 import { formatDate } from './utils';
-
-const PAGE_SIZE = 10;
 
 interface UsersListProps {
   users: IUser[];
@@ -28,16 +27,16 @@ export function UsersList({
 }: UsersListProps) {
   const rangeStart = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const rangeEnd = Math.min(page * pageSize, total);
-  const phantomCount = Math.max(0, PAGE_SIZE - users.length);
+  const phantomCount = Math.max(0, USERS_PAGE_SIZE - users.length);
 
   return (
     <>
       {/* Panel header */}
       <div className="flex-shrink-0 border-b border-border px-5 py-4">
-        <div className="font-syne text-[15px] font-bold text-foreground">Users</div>
+        <div className="font-syne text-[15px] font-bold text-foreground">Użytkownicy</div>
         {!isLoading && !isError && (
           <div className="mt-0.5 font-mono text-[11px] text-subtle">
-            {total.toLocaleString()} results · page {page} of {totalPages}
+            {total.toLocaleString()} wyników · strona {page} z {totalPages}
           </div>
         )}
       </div>
@@ -45,23 +44,23 @@ export function UsersList({
       {/* Table area */}
       <div className="flex-1 overflow-hidden">
         {isError ? (
-          <EmptyRows message="Could not load users. Try refreshing." />
+          <EmptyRows message="Nie udało się załadować użytkowników. Spróbuj odświeżyć." />
         ) : isLoading && users.length === 0 ? (
-          <EmptyRows message="Loading users…" />
+          <EmptyRows message="Ładowanie użytkowników…" />
         ) : users.length === 0 ? (
-          <EmptyRows message="No users yet" />
+          <EmptyRows message="Brak użytkowników" />
         ) : (
           <table className="w-full border-collapse">
             <thead>
               <tr className="border-b border-border bg-background">
                 <th className="h-[38px] px-5 text-left text-[10px] font-bold uppercase tracking-[0.08em] text-subtle">
-                  User
+                  Użytkownik
                 </th>
                 <th className="h-[38px] px-5 text-left text-[10px] font-bold uppercase tracking-[0.08em] text-subtle">
-                  Email
+                  E-mail
                 </th>
                 <th className="h-[38px] px-5 text-left text-[10px] font-bold uppercase tracking-[0.08em] text-subtle">
-                  Added
+                  Dodano
                 </th>
               </tr>
             </thead>
@@ -119,7 +118,7 @@ function EmptyRows({ message }: { message: string }) {
   return (
     <table className="w-full border-collapse">
       <tbody>
-        {Array.from({ length: PAGE_SIZE }).map((_, i) => (
+        {Array.from({ length: USERS_PAGE_SIZE }).map((_, i) => (
           <tr
             key={i}
             className="h-[52px] border-b border-border last:border-b-0"

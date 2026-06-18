@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Get,
@@ -14,14 +13,14 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { User } from '@prisma/client';
+import { MAX_CSV_FILE_SIZE_BYTES } from '@shared/constants';
 import { ImportResult } from '@shared/types';
 import { CreateUserDto } from './dto/create-user.dto';
 import { ListUsersDto } from './dto/list-users.dto';
 import { CsvImportService } from './csv-import.service';
+import { FileMissingError } from './csv-import.errors';
 import { MulterExceptionFilter } from './csv-upload.filter';
 import { UserListResult, UsersService } from './users.service';
-
-const MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024;
 
 @Controller('users')
 export class UsersController {
@@ -44,16 +43,13 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   @UseFilters(new MulterExceptionFilter())
   @UseInterceptors(
-    FileInterceptor('file', { limits: { fileSize: MAX_FILE_SIZE_BYTES } }),
+    FileInterceptor('file', { limits: { fileSize: MAX_CSV_FILE_SIZE_BYTES } }),
   )
   async importCsv(
     @UploadedFile() file: Express.Multer.File,
   ): Promise<ImportResult> {
     if (!file) {
-      throw new BadRequestException({
-        code: 'FILE_MISSING',
-        message: 'No CSV file uploaded',
-      });
+      throw new FileMissingError();
     }
 
     const result = await this.csvImportService.import(file.buffer);

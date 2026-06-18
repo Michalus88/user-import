@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Users, UserPlus, Upload } from 'lucide-react';
+import { USERS_PAGE_SIZE } from '@shared/constants';
 import { AddUserForm } from '@/features/users/add-user-form';
 import { UsersList } from '@/features/users/users-list';
 import { StatsCard } from '@/features/users/stats-card';
@@ -11,7 +12,7 @@ import { cn } from '@/lib/utils';
 type ActiveTab = 'add-user' | 'import-csv';
 
 const TABS: { id: ActiveTab; label: string; Icon: typeof UserPlus }[] = [
-  { id: 'add-user', label: 'Add User', Icon: UserPlus },
+  { id: 'add-user', label: 'Dodaj użytkownika', Icon: UserPlus },
   { id: 'import-csv', label: 'Import CSV', Icon: Upload },
 ];
 
@@ -24,7 +25,7 @@ export function App() {
 
   const users = data?.users ?? [];
   const total = data?.total ?? 0;
-  const pageSize = data?.pageSize ?? 10;
+  const pageSize = data?.pageSize ?? USERS_PAGE_SIZE;
   const totalPages = pageSize ? getTotalPages(total, pageSize) : 1;
 
   return (
@@ -37,9 +38,9 @@ export function App() {
           </div>
           <div>
             <div className="font-syne text-[15px] font-bold leading-none text-foreground">
-              User Management
+              Zarządzanie użytkownikami
             </div>
-            <div className="mt-0.5 text-[11px] text-subtle">Admin Panel</div>
+            <div className="mt-0.5 text-[11px] text-subtle">Panel administratora</div>
           </div>
         </div>
       </header>
@@ -92,7 +93,7 @@ export function App() {
 
           {/* Right panel — users table */}
           <section
-            aria-label="Users"
+            aria-label="Użytkownicy"
             className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm lg:flex-1"
           >
             <UsersList

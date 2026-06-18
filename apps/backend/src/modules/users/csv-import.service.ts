@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { IMPORT_ERROR_CODES } from '@shared/constants';
 import { ImportResult, ImportRowError } from '@shared/types';
 import { parseCsv, ParsedRow } from './csv-import.parser';
@@ -6,27 +6,58 @@ import { UsersRepository } from './users.repository';
 
 @Injectable()
 export class CsvImportService {
+  private readonly logger = new Logger(CsvImportService.name);
+
   constructor(private readonly usersRepository: UsersRepository) {}
 
   async import(buffer: Buffer): Promise<ImportResult> {
-    const { validRows, errors, skippedInFileCount, total } = parseCsv(buffer);
+    const { validRows, errors, total } = parseCsv(buffer);
 
     const { eligible, dbDuplicateErrors } =
       await this.partitionByDbDuplicates(validRows);
 
-    const inserted =
-      eligible.length > 0
-        ? await this.usersRepository.createMany(
-            eligible.map(({ username, email }) => ({ username, email })),
-          )
-        : 0;
+    let inserted = 0;
+    let raceConditionErrors: ImportRowError[] = [];
+
+    if (eligible.length > 0) {
+      inserted = await this.usersRepository.createMany(
+        eligible.map(({ username, email }) => ({ username, email })),
+      );
+
+      if (inserted < eligible.length) {
+        raceConditionErrors = await this.reconcileRaceLosers(eligible);
+      }
+    }
+
+    const skipped = total - inserted;
+    this.logger.log(
+      `CSV import finished: inserted=${inserted} skipped=${skipped} total=${total}`,
+    );
 
     return {
       inserted,
-      skipped: skippedInFileCount + dbDuplicateErrors.length,
+      skipped,
       total,
-      errors: [...errors, ...dbDuplicateErrors],
+      errors: [...errors, ...dbDuplicateErrors, ...raceConditionErrors],
     };
+  }
+
+  private async reconcileRaceLosers(
+    eligible: ParsedRow[],
+  ): Promise<ImportRowError[]> {
+    const nowExistingEmails = await this.usersRepository.findEmailsIn(
+      eligible.map((row) => row.email),
+    );
+    const nowExistingSet = new Set(nowExistingEmails);
+
+    return eligible
+      .filter((row) => nowExistingSet.has(row.email))
+      .map((row) => ({
+        row: row.rowNumber,
+        field: 'email',
+        code: IMPORT_ERROR_CODES.EMAIL_DUPLICATE_IN_DB,
+        message: `Email ${row.email} already exists`,
+      }));
   }
 
   private async partitionByDbDuplicates(

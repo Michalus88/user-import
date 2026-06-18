@@ -1,5 +1,11 @@
 import { DomainError } from '../../common/errors/domain-error';
 
+export class FileMissingError extends DomainError {
+  constructor() {
+    super('FILE_MISSING', 'No CSV file uploaded');
+  }
+}
+
 export class MalformedCsvError extends DomainError {
   constructor() {
     super('MALFORMED_CSV', 'CSV file is malformed or missing required headers');

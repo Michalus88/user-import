@@ -1,4 +1,4 @@
-import { ArgumentsHost, HttpStatus } from '@nestjs/common';
+import { ArgumentsHost, HttpStatus, Logger } from '@nestjs/common';
 import multer from 'multer';
 import { MulterExceptionFilter } from './csv-upload.filter';
 
@@ -14,6 +14,15 @@ const mockHost = (res: ReturnType<typeof mockResponse>): ArgumentsHost =>
 
 describe('MulterExceptionFilter', () => {
   const filter = new MulterExceptionFilter();
+  let warnSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    warnSpy = jest.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    warnSpy.mockRestore();
+  });
 
   it('maps LIMIT_FILE_SIZE to 413 with FILE_TOO_LARGE code', () => {
     const res = mockResponse();

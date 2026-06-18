@@ -4,67 +4,87 @@
 
 ## 1. Kontekst — co właściwie jest problemem
 
-Zadanie nazywa się „import użytkowników z CSV", ale to opis rozwiązania, nie problemu. Pod spodem leży coś prostszego: dostęp do panelu nadawany jest grupom, nie pojedynczym osobom. Typowy scenariusz to nowa grupa klientów po podpisaniu umowy z działem sprzedaży, klasa uczniów, kohorta szkolenia. Ktoś inny — sprzedawca, HR, ktoś z biura — zebrał już tę listę zanim trafiła do admina. Admin nie tworzy danych, on je tylko przenosi do systemu.
+„Import użytkowników z CSV” to nazwa rozwiązania, nie problemu. Problem jest prosty: trzeba szybko dodać do panelu całe grupy użytkowników, nie pojedyncze osoby. Lista zwykle powstaje wcześniej (sprzedaż, HR, biuro), a admin tylko przenosi ją do systemu.
 
-Bez importu admin musi te 20-50 osób wprowadzać ręcznie, jedna po drugiej. Czas to najmniejszy problem — pół godziny klikania da się przeżyć. Większy problem to literówki — błąd admina (zły adres, zła nazwa) jest praktycznie niewykrywalny aż do momentu, gdy ktoś nie może się zalogować albo mailing trafia w pustkę. Import z pliku eliminuje tę klasę błędów — bo źródłowe dane są takie, jakie były w arkuszu, plus walidator może wyłapać oczywiste rzeczy zanim trafią do bazy.
+Bez importu admin wpisuje 20-50 osób ręcznie. To zabiera czas i zwiększa ryzyko literówek. Taki błąd często wychodzi dopiero przy logowaniu albo wysyłce maila. Import z CSV ogranicza ten problem, bo dane są brane z gotowej listy, a walidacja wyłapuje podstawowe błędy przed zapisem.
 
-Zakładam, że administratorem panelu jest osoba zarządzająca kontami, niekoniecznie techniczna. Specyfikacja jej nie precyzuje — to moja interpretacja, ale wpływa na decyzje projektowe (np. raport błędów musi być zrozumiały dla nie-programisty).
+Zakładam, że admin panelu nie musi być osobą techniczną. Specyfikacja tego nie narzuca, ale to założenie wpływa na projekt: raport błędów ma być prosty i czytelny.
 
 ## 2. Dlaczego CSV
 
-Wybór CSV nie jest oczywisty — to świadoma decyzja, nie default. Trzy powody, dla których wygrywa z alternatywami:
+CSV to świadomy wybór. Powód jest prosty: format jest powszechny, lekki i przewidywalny.
 
-Uniwersalność. CSV jest wspierany przez wszystko, z czego dane realnie pochodzą: Excel, Google Sheets, eksporty z CRM, systemów HR, dzienników. Eksport do CSV jest w każdym z tych narzędzi dostępny w jednym kliknięciu, bez konwersji ani dodatkowego oprogramowania.
+CSV lepiej pasuje do tego scenariusza niż JSON, bo JSON jest wygodniejszy głównie w integracjach system-system, a nie przy ręcznym przygotowaniu pliku przez admina.
 
-Lekkość parsowania. CSV to czysty tekst. Node parsuje go bez ciężkich bibliotek — csv-parse/sync to kilkanaście kB i zerowa konfiguracja. Format xlsx wymaga exceljs czy sheetjs, plus obsługi arkuszy, formuł, scalonych komórek — nadmiarowość bez wartości, kiedy kolumny to dosłownie username i email.
+Uniwersalność. CSV eksportują Excel, Google Sheets, CRM i systemy HR bez dodatkowych narzędzi.
 
-Przewidywalność struktury. CSV ma jasny kontrakt: header + wiersze, koniec. Pliki xlsx mogą mieć wiele arkuszy, ukryte kolumny, formuły — system nigdy nie wie, który zakres wziąć.
+Lekkość parsowania. To zwykły tekst, więc parsowanie jest proste. Dla xlsx potrzebne są cięższe biblioteki i więcej obsługi.
+
+Przewidywalność struktury. CSV ma prosty układ: header i wiersze. W xlsx dochodzą arkusze, ukryte kolumny i inne elementy, które komplikują import.
 
 ## 3. Ograniczenia CSV i co z nich wynika
 
-CSV jako format wejścia ma kilka strukturalnych braków, które trzeba pokryć po stronie systemu.
+CSV ma ograniczenia, więc część reguł musi egzekwować system.
 
-Brak walidacji wewnątrz pliku. Excel i Sheets niczego nie wymuszają, więc admin może wgrać plik z pustymi polami, niepoprawnym formatem adresu, brakującymi kolumnami. Plik przychodzi w całości, bez okazji do walidacji rekord po rekordzie. Walidacja musi być po stronie systemu, per rekord, i błąd w jednym wierszu nie może blokować reszty.
+Brak walidacji w pliku. Excel i Sheets nie pilnują wymaganych pól ani formatu danych. Dlatego walidacja jest po stronie systemu, per rekord, a błąd jednego wiersza nie blokuje reszty.
 
-Duplikaty w obrębie pliku się zdarzają. Cicha deduplikacja byłaby gorsza niż błąd, bo admin nie zauważy, że rekord zniknął. Pierwsze wystąpienie zostaje, kolejne raportujemy jako duplikat z odniesieniem do wiersza-oryginału.
+Duplikaty w pliku raportujemy jako błąd. Pierwszy rekord zostaje, kolejne dostają informację o duplikacie i numerze wiersza źródłowego.
 
-Kodowanie znaków w CSV nie jest ustandaryzowane, więc parser akceptuje wyłącznie UTF-8 i usuwa BOM. Plik w innym kodowaniu odrzucamy jeszcze przed parsowaniem, żeby uniknąć zapisu zniekształconych danych. W produkcji warto dodać detekcję kodowania i transkodowanie do UTF-8 z ręcznym potwierdzeniem, ale tutaj zostaje twardy wymóg UTF-8.
+Email, który już istnieje w bazie, traktujemy jako „rekord już istnieje”. Import nie aktualizuje danych. Import dodaje nowe konta, a edycja to osobny endpoint poza zakresem.
 
-Separator także bywa różny. W wielu lokalnych ustawieniach Excel eksportuje CSV ze średnikiem zamiast przecinka. Dlatego parser wybiera separator na podstawie pierwszej linii: bierze dominujący znak z zestawu przecinek/średnik/tab, a przy remisie używa przecinka. To daje przewidywalne działanie i minimalizuje ryzyko cichego błędu.
+Kodowanie CSV nie jest jednolite, więc parser akceptuje tylko UTF-8 i usuwa BOM. Inne kodowanie odrzucamy przed parsowaniem, żeby uniknąć zapisu zniekształconych danych. W produkcji warto dodać detekcję kodowania i transkodowanie do UTF-8 z ręcznym potwierdzeniem, ale tutaj zostaje twardy wymóg UTF-8.
+
+Separator też bywa różny. Parser wykrywa go z pierwszej linii (przecinek, średnik, tab), a przy remisie wybiera przecinek. To daje przewidywalne działanie i minimalizuje ryzyko cichego błędu.
 
 Podgląd przed zapisem jest poza zakresem. Sama detekcja kodowania i walidacja wierszy nie gwarantują, że dane wyglądają dokładnie tak, jak oczekuje admin. Docelowo warto mieć etap podglądu kilku pierwszych rekordów i dopiero potem potwierdzenie importu, ale to wymaga dwuetapowego API i przechowania pliku między requestami.
 
-Po przesłaniu pliku admin nie dostaje natychmiastowego feedbacku. W formularzu pojedynczego usera błąd pokazuje się przy polu od razu; przy CSV ten loop trzeba odtworzyć dopiero po imporcie — raport per wiersz z liczbą zapisanych, pominiętych, oraz listą błędów (numer linii, pole, powód). Bez tego admin nie wie, czy import się udał, ani co poprawić.
+Po przesłaniu pliku admin nie dostaje natychmiastowego feedbacku. W formularzu pojedynczego usera błąd pokazuje się przy polu od razu; przy CSV nformację zwrotną dostajemy dopiero po imporcie — raport per wiersz z liczbą zapisanych, pominiętych, oraz listą błędów (numer linii, pole, powód). Bez tego admin nie wie, czy import się udał, ani co poprawić.
 
-Rozmiar i liczba wierszy też nie są ograniczone w samym formacie. Nic nie powstrzymuje admina przed wgraniem 500 MB albo 200 000 wierszy — przez nieuwagę albo złośliwie. System ma jawne limity rozmiaru i liczby wierszy; powyżej nich zwraca błąd z czytelnym komunikatem. Sama wartość liczbowa to detal implementacyjny; obecność limitu jest deklaracją skali, w której to narzędzie ma działać.
+Format CSV nie ogranicza rozmiaru pliku ani liczby wierszy. Nic nie powstrzymuje admina przed wgraniem 500 MB albo 200 000 wierszy — przez nieuwagę albo złośliwie. Dlatego system ma jawne limity i zwraca błąd po ich przekroczeniu.
 
 ## 4. Decyzje implementacyjne
 
-Partial success zamiast all-or-nothing. Kiedy plik ma 100 wierszy a 20 jest niepoprawnych, zapisujemy 80 poprawnych i raportujemy 20 z opisem błędu — zamiast odrzucać cały import. Bez tego jedna literówka unieważnia cały plik; admin wraca do arkusza i wgrywa ponownie. Cena leży w warstwie aplikacyjnej: walidacja i śledzenie wyniku per wiersz, mapowanie błędów na kody. Same wstawienia do bazy nadal idą jednym batchem, więc nie jest to koszt w SQL.
+Partial success zamiast all-or-nothing. Celem jest uniknięcie sytuacji, w której jeden błędny wiersz blokuje cały import. Poprawne rekordy zapisujemy, a błędne zwracamy w raporcie per wiersz. Koszt tej decyzji jest w logice aplikacji (walidacja i raportowanie), nie w SQL, bo insert nadal idzie batchem.
 
-Preflight SELECT + filtered batch INSERT zamiast INSERT z ON CONFLICT DO NOTHING. Najpierw jedna kwerenda SELECT po wszystkich emailach z importu, potem filtrujemy te już istniejące, na koniec batch INSERT pozostałych. Alternatywa -insert wszystko, baza milcząco pominie konflikty, wymaga porównania wysłanego z wstawionym, żeby ustalić co zostało odrzucone. Preflight kosztuje jeden dodatkowy SELECT, ale daje gotowy raport per wiersz bez post-processingu.
+Pole skipped obejmuje wszystkie wiersze, które nie trafiły do bazy: błędy walidacji, duplikaty w pliku, duplikaty względem bazy i konflikty równoległych zapisów. Dla każdego wyniku obowiązuje niezmiennik inserted + skipped = total. Szczegóły per wiersz są w polu errors.
 
-Response shape. Endpoint zwraca 200 z body opisującym wynik importu — liczbę zapisanych, pominiętych oraz listę błędów per wiersz — zarówno dla pełnego sukcesu, jak i partial success. Status 422 ma sens dopiero wtedy, gdy żaden rekord nie został zapisany, bo wtedy operacja nie przyniosła żadnego użytecznego efektu. Status 400 zostaje dla nieparsowalnego CSV, a 413 dla przekroczenia limitu rozmiaru lub liczby wierszy. Rozważałem 207 Multi-Status, bo dobrze oddaje mieszany wynik operacji, ale ten kod najczęściej pojawia się w kontekście WebDAV i nie jest typowym wyborem dla zwykłych endpointów REST. W praktyce 200 z przewidywalnym, ustrukturyzowanym body jest prostsze dla klienta, czytelniejsze w logach i mniej zaskakujące przy integracji.
+Preflight SELECT + filtered batch INSERT zamiast INSERT z ON CONFLICT DO NOTHING: najpierw sprawdzamy istniejące emaile, potem wstawiamy tylko pozostałe rekordy. To upraszcza raport per wiersz i eliminuje porównywanie wejścia z wynikiem insertu. Ryzyko wyścigu między SELECT i INSERT obsługujemy przez skipDuplicates oraz dodatkowy SELECT tylko wtedy, gdy liczba faktycznie wstawionych rekordów jest mniejsza od oczekiwanej.
 
-Prisma zamiast TypeORM. Schema w pliku schema.prisma jest jedynym źródłem prawdy modelu danych — z niej generują się typy używane wprost w serwisie, bez duplikowania jako Entity i interfejs odpowiedzi. Migracje przez prisma migrate dev są krótsze proceduralnie niż TypeORM CLI. Cena: kilka linii PrismaService extends PrismaClient z OnModuleInit, co jest mniej Nest-native niż @nestjs/typeorm, ale w zamian dostajemy end-to-end type-safety na zapytaniach.
+Response shape. Dla sukcesu pełnego i częściowego endpoint zwraca 200 z tym samym body: inserted, skipped i errors. Dzięki temu klient ma jeden prosty kontrakt odpowiedzi. Status 422 ma sens tylko wtedy, gdy nie zapisano żadnego rekordu. Status 400 zostaje dla nieparsowalnego CSV, a 413 dla przekroczenia limitu pliku lub liczby wierszy. 207 Multi-Status pomijamy, bo to mniej typowe w REST i nie upraszcza integracji.
+
+Prisma zamiast TypeORM. Schema prisma jest jednym źródłem prawdy modelu i typów, więc nie duplikujemy struktur danych. Migracje w tym setupie są prostsze. Koszt: własny PrismaService jest mniej Nest-native niż @nestjs/typeorm. Zysk: pełne type-safety zapytań end-to-end.
 
 Walidacja danych użytkownika wpisywanych przez admina jako wspólna reguła dla obu stron. Regex dla pola username trzymam w packages/constants i używam go i na backendzie (DTO + class-validator), i na frontendzie (walidacja przed wysyłką). Dzięki temu zasada jest dokładnie ta sama w obu miejscach i minimalizujemy wystąpienie tego błędu.
 
-TanStack Query zamiast ręcznego useState + refetch. Lista użytkowników odświeża się po każdej mutacji (single-user POST, CSV import) przez queryClient.invalidateQueries — jedna linia zamiast ręcznego wołania refetch po sukcesie. Loading, error i refetch state przychodzą gotowe z useQuery, bez trzech useState na zapytanie. Koszt: dodatkowa zależność ~13 kB gzip i jednorazowy setup QueryClientProvider w main.tsx; w zamian wbudowana cache invalidation (jedno wywołanie zamiast własnej logiki refetch) i mniej miejsc, w których można zapomnieć odświeżyć dane.
+TanStack Query zamiast ręcznego useState + refetch. Po mutacjach odświeżamy listę przez invalidateQueries, więc klient ma jeden prosty mechanizm aktualizacji danych. useQuery daje od razu loading/error bez dodatkowego stanu lokalnego. Koszt: dodatkowa zależność i jednorazowy setup QueryClientProvider.
 
-Paginacja jako element podstawowego kontraktu listy. GET /users zwraca {users, total, page, pageSize}, frontend używa ShadCN Pagination + queryKey z page w TanStack Query. Bez tego lista po imporcie tysięcy wierszy zalewa DOM.
+Paginacja jako element podstawowego kontraktu listy. GET /users zwraca {users, total, page, pageSize}, frontend używa ShadCN Pagination + queryKey z page w TanStack Query. Dzięki temu strony listy są cache'owane per queryKey i powrót na wcześniej otwartą stronę nie wymaga ponownego ładowania od zera. Bez paginacji lista po imporcie tysięcy wierszy zalewa DOM.
 
-Limity rozmiaru pliku i liczby wierszy jako dwa niezależne guardy. Multer odrzuca upload powyżej 2 MB jeszcze przed parsowaniem, dzięki czemu nie zużywamy zasobów na pliki wykraczające poza założoną skalę. Po sparsowaniu odrzucamy plik z więcej niż 10 000 wierszami, bo nawet niewielki plik może zawierać bardzo krótkie, gęsto upakowane rekordy. To dwa różne ograniczenia i każde adresuje inny koszt operacyjny. Powyżej tej skali import nadal może być technicznie wykonalny przez sync HTTP, ale przestaje być dobrym kontraktem dla przewidywalnej operacji administracyjnej. Wtedy lepszym kierunkiem staje się streaming albo przetwarzanie asynchroniczne przez kolejkę.
+Limity rozmiaru pliku i liczby wierszy to dwa niezależne guardy. Multer odrzuca pliki powyżej 2 MB przed parsowaniem, a parser odrzuca pliki powyżej 10 000 wierszy po parsowaniu. Każdy limit chroni inny koszt operacyjny. Import strumieniowy albo asynchroniczny ma sens dopiero przy dużo większej skali, gdy import nie mieści się w czasie requestu lub obecnych limitach.
 
-## 5. Skala
+## 5. Decyzje architektoniczne
 
-W obecnym zadaniu świadomie zostaję przy imporcie synchronicznym: plik jest wczytywany w pamięć, parsowany przez csv-parse/sync, a jeden request HTTP zwraca od razu raport wyniku. To wystarcza dla administracyjnych importów rzędu dziesiątek, setek czy kilku tysięcy rekordów i dobrze pasuje do wymagań zadania, gdzie najważniejsze są prostota rozwiązania oraz czytelny feedback per wiersz.
+Repository jest jedyną warstwą stykającą się z ORM. Service trzyma logikę domenową i nie wywołuje Prismy bezpośrednio. Zmiana ORM albo dodanie cache zamyka się w jednym miejscu na moduł.
 
-Gdyby skala realnie rosła, pierwszym krokiem nie byłaby od razu kolejka, tylko parsowanie strumieniowe i inserty batchami. Taki wariant ogranicza zużycie pamięci i lepiej znosi większe pliki, a nadal zachowuje prosty model jednego requestu i jednej odpowiedzi.
+DomainError + globalny ExceptionFilter + statyczna mapa wyjątku -> HttpStatus. Kontroler rzuca błędy domenowe, a mapowanie HTTP jest w jednym miejscu. Nieobsłużone przypadki wpadają w 500 i są logowane.
 
-Kolejka i osobny worker mają sens dopiero wtedy, gdy import staje się operacją długą, podatną na timeouty albo częścią większego workflow, który musi przeżyć restart aplikacji i wspierać ponawianie. To sensowny kierunek rozwoju, ale na potrzeby tego zadania byłby przedwczesną komplikacją.
+Multer filter jest osobno od DomainExceptionFilter. Błędy uploadu (LIMIT_FILE_SIZE i podobne) powstają przed parserem i pochodzą z middleware, więc nie trafiają do hierarchii DomainError.
 
-## 6. Co świadomie zostawiam poza scope
+CSV import jest w module users, nie w osobnym module. To część tej samej domeny i używa tego samego UsersRepository. Osobny moduł miałby sens dopiero przy kolejnych typach importu.
+
+packages/constants to wspólne źródło limitów i stałych. Te same reguły walidacji i limity działają na backendzie i frontendzie.
+
+Używam domyślnego Nest Logger zamiast pino/winston. Na ten zakres wystarcza, a kluczowe miejsca są logowane (500, odrzucony upload, podsumowanie importu).
+
+Brak globalnego state managera na froncie. TanStack Query obsługuje dane z API i invalidacje, a useState wystarcza na stan UI. Redux/Zustand byłyby tu nadmiarem.
+
+Limit pliku to dwa niezależne guardy. Multer pilnuje rozmiaru bajtów przed parsowaniem, parser pilnuje liczby wierszy po parsowaniu. Każdy chroni inny koszt operacyjny.
+
+## 6. Skala
+
+W tym zadaniu zostaję przy imporcie synchronicznym, bo przy przyjętych limitach to najprostszy i wystarczający model. Jeśli skala wzrośnie, naturalny kolejny krok to parsowanie strumieniowe i batch insert, żeby ograniczyć pamięć. Kolejka i osobny worker mają sens dopiero wtedy, gdy import przekracza czas requestu albo wymaga retry i odporności na restart.
+
+## 7. Co świadomie zostawiam poza scope
 
 Autentykacja i autoryzacja. W realnym systemie byłyby konieczne, ale nie wpływają na ocenę samego mechanizmu importu użytkowników.
 

@@ -19,7 +19,15 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
-    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand"
+    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "db:generate": "prisma generate",
+    "db:migrate:dev": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:migrate:status": "prisma migrate status",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio",
+    "db:reset": "prisma migrate reset",
+    "db:seed": "prisma db seed"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -33,6 +41,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "csv-parse": "^7.0.0",
+    "dotenv": "^17.4.2",
     "helmet": "^8.2.0",
     "pg": "^8.21.0",
     "reflect-metadata": "^0.2.2",
@@ -75,11 +84,25 @@
     "rootDir": "src",
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
+      "^.+\\.(t|j)s$": [
+        "ts-jest",
+        {
+          "tsconfig": {
+            "module": "commonjs",
+            "moduleResolution": "node",
+            "resolvePackageJsonExports": false,
+            "esModuleInterop": true,
+            "experimentalDecorators": true,
+            "emitDecoratorMetadata": true,
+            "target": "ES2023"
+          }
+        }
+      ]
     },
     "moduleNameMapper": {
       "^@shared/types$": "<rootDir>/../../../packages/types/index.ts",
-      "^@shared/constants$": "<rootDir>/../../../packages/constants/index.ts"
+      "^@shared/constants$": "<rootDir>/../../../packages/constants/index.ts",
+      "^(\\.{1,2}/.*)\\.js$": "$1"
     },
     "collectCoverageFrom": [
       "**/*.(t|j)s"

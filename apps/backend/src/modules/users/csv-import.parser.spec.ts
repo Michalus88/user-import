@@ -142,7 +142,9 @@ describe('parseCsv', () => {
     });
 
     it('accepts username with spaces', () => {
-      const result = parseCsv(csv('username,email\nJan Kowalski,jan@example.com'));
+      const result = parseCsv(
+        csv('username,email\nJan Kowalski,jan@example.com'),
+      );
       expect(result.validRows).toHaveLength(1);
       expect(result.validRows[0].username).toBe('Jan Kowalski');
     });
@@ -210,6 +212,7 @@ describe('parseCsv', () => {
         row: 3,
         field: 'email',
         code: IMPORT_ERROR_CODES.EMAIL_DUPLICATE_IN_FILE,
+        relatedRow: 2,
       });
       expect(result.skippedInFileCount).toBe(1);
     });
@@ -239,35 +242,9 @@ describe('parseCsv', () => {
   describe('encoding and line endings', () => {
     it('rejects non-UTF-8 buffer with InvalidEncodingError', () => {
       const win1250Bytes = Buffer.from([
-        0x75,
-        0x73,
-        0x65,
-        0x72,
-        0x6e,
-        0x61,
-        0x6d,
-        0x65,
-        0x2c,
-        0x65,
-        0x6d,
-        0x61,
-        0x69,
-        0x6c,
-        0x0a,
-        0xa3,
-        0x75,
-        0x6b,
-        0x61,
-        0x73,
-        0x7a,
-        0x2c,
-        0x6c,
-        0x40,
-        0x78,
-        0x2e,
-        0x63,
-        0x6f,
-        0x6d,
+        0x75, 0x73, 0x65, 0x72, 0x6e, 0x61, 0x6d, 0x65, 0x2c, 0x65, 0x6d, 0x61,
+        0x69, 0x6c, 0x0a, 0xa3, 0x75, 0x6b, 0x61, 0x73, 0x7a, 0x2c, 0x6c, 0x40,
+        0x78, 0x2e, 0x63, 0x6f, 0x6d,
       ]);
       expect(() => parseCsv(win1250Bytes)).toThrow(InvalidEncodingError);
     });
@@ -279,9 +256,7 @@ describe('parseCsv', () => {
     });
 
     it('strips UTF-8 BOM from Excel-on-Windows CSV exports', () => {
-      const result = parseCsv(
-        csv('﻿username,email\nalice,alice@example.com'),
-      );
+      const result = parseCsv(csv('﻿username,email\nalice,alice@example.com'));
       expect(result.validRows).toHaveLength(1);
       expect(result.errors).toHaveLength(0);
     });

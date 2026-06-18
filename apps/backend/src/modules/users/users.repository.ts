@@ -35,7 +35,10 @@ export class UsersRepository {
   }
 
   async createMany(rows: NewUser[]): Promise<number> {
-    const result = await this.db.user.createMany({ data: rows });
+    const result = await this.db.user.createMany({
+      data: rows,
+      skipDuplicates: true,
+    });
     return result.count;
   }
 }

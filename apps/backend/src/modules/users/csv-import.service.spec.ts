@@ -1,9 +1,7 @@
+import { Logger } from '@nestjs/common';
 import { IMPORT_ERROR_CODES } from '@shared/constants';
 import { CsvImportService } from './csv-import.service';
-import {
-  MalformedCsvError,
-  RowCountExceededError,
-} from './csv-import.errors';
+import { MalformedCsvError, RowCountExceededError } from './csv-import.errors';
 import { UsersRepository } from './users.repository';
 
 const csv = (content: string): Buffer => Buffer.from(content, 'utf-8');
@@ -18,10 +16,16 @@ const mockRepo = (): jest.Mocked<
 describe('CsvImportService', () => {
   let service: CsvImportService;
   let repo: jest.Mocked<Pick<UsersRepository, 'findEmailsIn' | 'createMany'>>;
+  let logSpy: jest.SpyInstance;
 
   beforeEach(() => {
     repo = mockRepo();
     service = new CsvImportService(repo as unknown as UsersRepository);
+    logSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    logSpy.mockRestore();
   });
 
   describe('full success', () => {
@@ -114,13 +118,14 @@ describe('CsvImportService', () => {
       expect(repo.createMany).not.toHaveBeenCalled();
     });
 
-    it('returns inserted=0 when all rows fail validation', async () => {
+    it('returns inserted=0 and counts the invalid row as skipped', async () => {
       repo.findEmailsIn.mockResolvedValue([]);
 
       const result = await service.import(csv('username,email\n,bad-email'));
 
       expect(result.inserted).toBe(0);
-      expect(result.skipped).toBe(0);
+      expect(result.skipped).toBe(1);
+      expect(result.total).toBe(1);
       expect(repo.createMany).not.toHaveBeenCalled();
     });
 
@@ -153,12 +158,91 @@ describe('CsvImportService', () => {
     });
   });
 
+  describe('inserted + skipped invariant', () => {
+    it('keeps inserted + skipped equal to total across mixed outcomes', async () => {
+      repo.findEmailsIn.mockResolvedValue(['carol@example.com']);
+      repo.createMany.mockResolvedValue(2);
+
+      const result = await service.import(
+        csv(
+          [
+            'username,email',
+            'alice,alice@example.com',
+            'bob,bob@example.com',
+            ',bad-email',
+            'carol,carol@example.com',
+            'dave,alice@example.com',
+          ].join('\n'),
+        ),
+      );
+
+      expect(result.total).toBe(5);
+      expect(result.inserted).toBe(2);
+      expect(result.skipped).toBe(3);
+      expect(result.inserted + result.skipped).toBe(result.total);
+    });
+  });
+
   describe('no DB call for empty valid rows', () => {
     it('does not call findEmailsIn when parser returns no valid rows', async () => {
       const result = await service.import(csv('username,email\n,bad-email'));
 
       expect(repo.findEmailsIn).not.toHaveBeenCalled();
       expect(result.errors).toHaveLength(2);
+    });
+  });
+
+  describe('race condition (concurrent insert between preflight and createMany)', () => {
+    it('does not re-query when createMany inserts every eligible row', async () => {
+      repo.findEmailsIn.mockResolvedValue([]);
+      repo.createMany.mockResolvedValue(2);
+
+      await service.import(
+        csv('username,email\nalice,alice@example.com\nbob,bob@example.com'),
+      );
+
+      expect(repo.findEmailsIn).toHaveBeenCalledTimes(1);
+    });
+
+    it('reports race losers as EMAIL_DUPLICATE_IN_DB on their original rows', async () => {
+      repo.findEmailsIn
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce(['bob@example.com']);
+      repo.createMany.mockResolvedValue(1);
+
+      const result = await service.import(
+        csv('username,email\nalice,alice@example.com\nbob,bob@example.com'),
+      );
+
+      expect(result.inserted).toBe(1);
+      expect(result.skipped).toBe(1);
+      expect(result.total).toBe(2);
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors[0]).toMatchObject({
+        row: 3,
+        field: 'email',
+        code: IMPORT_ERROR_CODES.EMAIL_DUPLICATE_IN_DB,
+      });
+      expect(repo.findEmailsIn).toHaveBeenCalledTimes(2);
+    });
+
+    it('reports every row as race loser when no inserts succeed under contention', async () => {
+      repo.findEmailsIn
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce(['alice@example.com', 'bob@example.com']);
+      repo.createMany.mockResolvedValue(0);
+
+      const result = await service.import(
+        csv('username,email\nalice,alice@example.com\nbob,bob@example.com'),
+      );
+
+      expect(result.inserted).toBe(0);
+      expect(result.skipped).toBe(2);
+      expect(result.errors).toHaveLength(2);
+      expect(result.errors.map((e) => e.code)).toEqual([
+        IMPORT_ERROR_CODES.EMAIL_DUPLICATE_IN_DB,
+        IMPORT_ERROR_CODES.EMAIL_DUPLICATE_IN_DB,
+      ]);
     });
   });
 });
