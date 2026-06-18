@@ -1,4 +1,4 @@
-import { ArgumentsHost, HttpStatus } from '@nestjs/common';
+import { ArgumentsHost, HttpStatus, Logger } from '@nestjs/common';
 import {
   FileMissingError,
   InvalidEncodingError,
@@ -21,9 +21,15 @@ const mockHost = (res: ReturnType<typeof mockResponse>): ArgumentsHost =>
 
 describe('DomainExceptionFilter', () => {
   let filter: DomainExceptionFilter;
+  let errorSpy: jest.SpyInstance;
 
   beforeEach(() => {
     filter = new DomainExceptionFilter();
+    errorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    errorSpy.mockRestore();
   });
 
   it.each([

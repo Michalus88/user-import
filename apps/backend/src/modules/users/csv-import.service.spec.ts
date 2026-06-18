@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { IMPORT_ERROR_CODES } from '@shared/constants';
 import { CsvImportService } from './csv-import.service';
 import { MalformedCsvError, RowCountExceededError } from './csv-import.errors';
@@ -15,10 +16,16 @@ const mockRepo = (): jest.Mocked<
 describe('CsvImportService', () => {
   let service: CsvImportService;
   let repo: jest.Mocked<Pick<UsersRepository, 'findEmailsIn' | 'createMany'>>;
+  let logSpy: jest.SpyInstance;
 
   beforeEach(() => {
     repo = mockRepo();
     service = new CsvImportService(repo as unknown as UsersRepository);
+    logSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    logSpy.mockRestore();
   });
 
   describe('full success', () => {
