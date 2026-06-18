@@ -1,6 +1,6 @@
 const BASE_URL = '/api';
 
-export interface ApiErrorBody {
+export interface ApiErrorBody extends Record<string, unknown> {
   statusCode?: number;
   code?: string;
   message?: string | string[];

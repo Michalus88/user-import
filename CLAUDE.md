@@ -103,6 +103,7 @@ src/
     csv-import/
       csv-upload-panel.tsx
       import-result-table.tsx
+      error-code-map.ts
       api.ts
       use-csv-import.ts
   components/
