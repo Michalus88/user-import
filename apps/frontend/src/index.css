@@ -2,25 +2,30 @@
 @import "tw-animate-css";
 
 :root {
-  --background: #f9fafb;
-  --foreground: #111827;
+  --background: #f8f7ff;
+  --foreground: #1a1625;
   --card: #ffffff;
-  --card-foreground: #111827;
-  --muted: #f3f4f6;
-  --muted-foreground: #6b7280;
-  --border: #e5e7eb;
-  --input: #f9fafb;
-  --ring: #8b5cf6;
+  --card-foreground: #1a1625;
+  --muted: #f5f3ff;
+  --muted-foreground: #6b6882;
+  --subtle: #9d9bb3;
+  --border: #e5e4f0;
+  --input: #f8f7ff;
+  --ring: #7c3aed;
   --primary: #7c3aed;
   --primary-foreground: #ffffff;
+  --primary-hover: #6d28d9;
   --primary-soft: #f5f3ff;
   --primary-soft-foreground: #6d28d9;
+  --primary-mid: #ede9fe;
   --radius: 0.5rem;
 }
 
 @theme inline {
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+  --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  --font-syne: 'Syne', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -28,18 +33,30 @@
   --color-card-foreground: var(--card-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
+  --color-subtle: var(--subtle);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
   --color-primary-soft: var(--primary-soft);
   --color-primary-soft-foreground: var(--primary-soft-foreground);
+  --color-primary-mid: var(--primary-mid);
 
   --radius-sm: calc(var(--radius) * 0.5);
   --radius-md: calc(var(--radius) * 0.75);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) * 1.5);
+}
+
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type='number'] {
+  -moz-appearance: textfield;
 }
 
 @layer base {
