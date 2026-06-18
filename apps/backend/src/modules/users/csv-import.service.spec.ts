@@ -161,4 +161,58 @@ describe('CsvImportService', () => {
       expect(result.errors).toHaveLength(2);
     });
   });
+
+  describe('race condition (concurrent insert between preflight and createMany)', () => {
+    it('does not re-query when createMany inserts every eligible row', async () => {
+      repo.findEmailsIn.mockResolvedValue([]);
+      repo.createMany.mockResolvedValue(2);
+
+      await service.import(
+        csv('username,email\nalice,alice@example.com\nbob,bob@example.com'),
+      );
+
+      expect(repo.findEmailsIn).toHaveBeenCalledTimes(1);
+    });
+
+    it('reports race losers as EMAIL_DUPLICATE_IN_DB on their original rows', async () => {
+      repo.findEmailsIn
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce(['bob@example.com']);
+      repo.createMany.mockResolvedValue(1);
+
+      const result = await service.import(
+        csv('username,email\nalice,alice@example.com\nbob,bob@example.com'),
+      );
+
+      expect(result.inserted).toBe(1);
+      expect(result.skipped).toBe(1);
+      expect(result.total).toBe(2);
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors[0]).toMatchObject({
+        row: 3,
+        field: 'email',
+        code: IMPORT_ERROR_CODES.EMAIL_DUPLICATE_IN_DB,
+      });
+      expect(repo.findEmailsIn).toHaveBeenCalledTimes(2);
+    });
+
+    it('reports every row as race loser when no inserts succeed under contention', async () => {
+      repo.findEmailsIn
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce(['alice@example.com', 'bob@example.com']);
+      repo.createMany.mockResolvedValue(0);
+
+      const result = await service.import(
+        csv('username,email\nalice,alice@example.com\nbob,bob@example.com'),
+      );
+
+      expect(result.inserted).toBe(0);
+      expect(result.skipped).toBe(2);
+      expect(result.errors).toHaveLength(2);
+      expect(result.errors.map((e) => e.code)).toEqual([
+        IMPORT_ERROR_CODES.EMAIL_DUPLICATE_IN_DB,
+        IMPORT_ERROR_CODES.EMAIL_DUPLICATE_IN_DB,
+      ]);
+    });
+  });
 });
