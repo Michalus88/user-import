@@ -142,6 +142,27 @@ describe('AllExceptionsFilter', () => {
     expect(errorSpy.mock.calls[0][0]).toContain('ECONNREFUSED');
   });
 
+  it('maps PrismaClientKnownRequestError with P2021 to HTTP 500 and logs schema-not-migrated hint', () => {
+    const res = mockResponse();
+    const exception = new Prisma.PrismaClientKnownRequestError('table does not exist', {
+      code: 'P2021',
+      clientVersion: '7.0.0',
+    });
+    filter.catch(exception, mockHost(res, { method: 'POST', url: '/api/users' }));
+
+    expect(res.status).toHaveBeenCalledWith(HttpStatus.INTERNAL_SERVER_ERROR);
+    expect(res.json).toHaveBeenCalledWith({
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      code: 'INTERNAL_ERROR',
+      message: 'Internal server error',
+    });
+    expect(errorSpy).toHaveBeenCalledTimes(1);
+    const logged = errorSpy.mock.calls[0][0] as string;
+    expect(logged).toContain('Database schema not migrated');
+    expect(logged).toContain('P2021');
+    expect(logged).toContain('pnpm db:migrate:deploy');
+  });
+
   it('maps PrismaClientKnownRequestError with unknown code to HTTP 500 and logs unhandled Prisma error', () => {
     const res = mockResponse();
     const exception = new Prisma.PrismaClientKnownRequestError('something broke', {

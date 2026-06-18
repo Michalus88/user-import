@@ -9,18 +9,8 @@ import {
 import { Prisma } from '@prisma/client';
 import { Request, Response } from 'express';
 
-const DB_CONNECTIVITY_CODES = new Set([
-  'P1001',
-  'P1002',
-  'P1008',
-  'P1017',
-  'P2021',
-  'P2024',
-  'ECONNREFUSED',
-  'ETIMEDOUT',
-  'ENOTFOUND',
-  'ECONNRESET',
-]);
+const DB_UNAVAILABLE_CODE = 'ECONNREFUSED';
+const MISSING_TABLE_CODE = 'P2021';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -37,9 +27,16 @@ export class AllExceptionsFilter implements ExceptionFilter {
     }
 
     if (exception instanceof Prisma.PrismaClientKnownRequestError) {
-      const label = DB_CONNECTIVITY_CODES.has(exception.code)
-        ? 'Database unavailable'
-        : 'Unhandled Prisma error';
+      if (exception.code === MISSING_TABLE_CODE) {
+        this.logger.error(
+          `Database schema not migrated [P2021] on ${request.method} ${request.url} — run "pnpm db:migrate:deploy"`,
+        );
+        return this.replyInternalError(response);
+      }
+      const label =
+        exception.code === DB_UNAVAILABLE_CODE
+          ? 'Database unavailable'
+          : 'Unhandled Prisma error';
       this.logger.error(`${label} [${exception.code}] on ${request.method} ${request.url}`);
       return this.replyInternalError(response);
     }
