@@ -1,6 +1,6 @@
+import { IMPORT_ERROR_CODES } from '@shared/constants';
 import { CsvImportService } from './csv-import.service';
 import {
-  IMPORT_ERROR_CODES,
   MalformedCsvError,
   RowCountExceededError,
 } from './csv-import.errors';

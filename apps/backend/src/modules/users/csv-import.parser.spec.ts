@@ -1,6 +1,6 @@
+import { IMPORT_ERROR_CODES } from '@shared/constants';
 import { parseCsv } from './csv-import.parser';
 import {
-  IMPORT_ERROR_CODES,
   InvalidEncodingError,
   MalformedCsvError,
   RowCountExceededError,
