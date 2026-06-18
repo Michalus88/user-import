@@ -136,6 +136,7 @@ export function parseCsv(buffer: Buffer): ParseResult {
         field: 'email',
         code: IMPORT_ERROR_CODES.EMAIL_DUPLICATE_IN_FILE,
         message: `Duplicate email — first seen at row ${firstSeenAt}`,
+        relatedRow: firstSeenAt,
       });
       skippedInFileCount++;
       continue;
