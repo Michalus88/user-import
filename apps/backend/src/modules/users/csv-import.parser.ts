@@ -1,7 +1,13 @@
 import { isUtf8 } from 'node:buffer';
 import { isEmail } from 'class-validator';
 import { parse } from 'csv-parse/sync';
-import { IMPORT_ERROR_CODES, USERNAME_REGEX } from '@shared/constants';
+import {
+  EMAIL_MAX_LENGTH,
+  IMPORT_ERROR_CODES,
+  USERNAME_MAX_LENGTH,
+  USERNAME_MIN_LENGTH,
+  USERNAME_REGEX,
+} from '@shared/constants';
 import { ImportRowError } from '@shared/types';
 import {
   InvalidEncodingError,
@@ -10,7 +16,6 @@ import {
 } from './csv-import.errors';
 
 const MAX_ROWS = 10_000;
-const USERNAME_MIN_LENGTH = 3;
 const REQUIRED_HEADERS = ['username', 'email'] as const;
 const CANDIDATE_DELIMITERS = [',', ';', '\t'] as const;
 const DEFAULT_DELIMITER = ',';
@@ -97,17 +102,18 @@ export function parseCsv(buffer: Buffer): ParseResult {
       });
     } else if (
       username.trim().length < USERNAME_MIN_LENGTH ||
+      username.trim().length > USERNAME_MAX_LENGTH ||
       !USERNAME_REGEX.test(username.trim())
     ) {
       rowErrors.push({
         row: rowNumber,
         field: 'username',
         code: IMPORT_ERROR_CODES.USERNAME_INVALID,
-        message: 'Username must be at least 3 characters and contain only letters, digits and spaces',
+        message: `Username must be 3–${USERNAME_MAX_LENGTH} characters and contain only letters, digits and spaces`,
       });
     }
 
-    if (!email || !isEmail(email)) {
+    if (!email || email.length > EMAIL_MAX_LENGTH || !isEmail(email)) {
       rowErrors.push({
         row: rowNumber,
         field: 'email',

@@ -1,7 +1,12 @@
 import { useState, type FormEvent } from 'react';
 import { Mail, User } from 'lucide-react';
 import { toast } from 'sonner';
-import { USERNAME_REGEX } from '@shared/constants';
+import {
+  EMAIL_MAX_LENGTH,
+  USERNAME_MAX_LENGTH,
+  USERNAME_MIN_LENGTH,
+  USERNAME_REGEX,
+} from '@shared/constants';
 import { useCreateUser } from './use-users';
 import { EMAIL_REGEX } from './utils';
 
@@ -13,7 +18,8 @@ interface AddUserFormProps {
 
 function validateUsername(value: string): string | null {
   if (value.trim().length === 0) return null;
-  if (value.trim().length < 3) return 'Username must be at least 3 characters';
+  if (value.trim().length < USERNAME_MIN_LENGTH) return 'Username must be at least 3 characters';
+  if (value.trim().length > USERNAME_MAX_LENGTH) return `Username must be at most ${USERNAME_MAX_LENGTH} characters`;
   if (!USERNAME_REGEX.test(value.trim()))
     return 'Username may only contain letters, digits and spaces';
   return null;
@@ -21,6 +27,7 @@ function validateUsername(value: string): string | null {
 
 function validateEmail(value: string): string | null {
   if (value.trim().length === 0) return null;
+  if (value.trim().length > EMAIL_MAX_LENGTH) return `Email must be at most ${EMAIL_MAX_LENGTH} characters`;
   if (!EMAIL_REGEX.test(value.trim())) return 'Enter a valid email address';
   return null;
 }
@@ -34,7 +41,10 @@ export function AddUserForm({ onCreated }: AddUserFormProps) {
   const trimmedUsername = username.trim();
   const trimmedEmail = email.trim();
   const isValid =
-    trimmedUsername.length >= 3 && EMAIL_REGEX.test(trimmedEmail);
+    trimmedUsername.length >= USERNAME_MIN_LENGTH &&
+    trimmedUsername.length <= USERNAME_MAX_LENGTH &&
+    trimmedEmail.length <= EMAIL_MAX_LENGTH &&
+    EMAIL_REGEX.test(trimmedEmail);
 
   const mutation = useCreateUser({
     onSuccess: (user) => {
@@ -89,6 +99,7 @@ export function AddUserForm({ onCreated }: AddUserFormProps) {
               id="add-user-email"
               type="email"
               value={email}
+              maxLength={EMAIL_MAX_LENGTH}
               onChange={(e) => {
                 setEmail(e.target.value);
                 setEmailError(validateEmail(e.target.value));
@@ -132,6 +143,7 @@ export function AddUserForm({ onCreated }: AddUserFormProps) {
               id="add-user-username"
               type="text"
               value={username}
+              maxLength={USERNAME_MAX_LENGTH}
               onChange={(e) => {
                 setUsername(e.target.value);
                 setUsernameError(validateUsername(e.target.value));
