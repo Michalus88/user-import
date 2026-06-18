@@ -12,8 +12,6 @@ Główny dokument dla osoby oceniającej: [`ANALIZA.md`](./ANALIZA.md) — konte
 - pnpm 10+
 - Docker (PostgreSQL)
 
-Minimum jest zadeklarowane w `engines` w `package.json`, nie pinujemy konkretnej wersji — to recruitment scope. W produkcji wersja runtime byłaby zamrożona przez Docker image w CI.
-
 ## Uruchomienie
 
 ```bash
