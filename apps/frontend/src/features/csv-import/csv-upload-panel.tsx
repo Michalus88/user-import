@@ -1,5 +1,6 @@
 import { useState, useRef, type DragEvent, type ChangeEvent, type KeyboardEvent } from 'react';
 import { Upload, AlertCircle, FileText } from 'lucide-react';
+import { MAX_CSV_FILE_SIZE_BYTES } from '@shared/constants';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { ImportResultTable } from './import-result-table';
@@ -41,12 +42,23 @@ export function CsvUploadPanel({ onImported }: CsvUploadPanelProps) {
       toast.error('Tylko pliki .csv są obsługiwane');
       return;
     }
+    if (dropped.size > MAX_CSV_FILE_SIZE_BYTES) {
+      toast.error('Plik przekracza limit 2 MB');
+      return;
+    }
     setFile(dropped);
   }
 
   function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
     const selected = e.target.files?.[0];
-    if (selected) setFile(selected);
+    if (selected) {
+      if (selected.size > MAX_CSV_FILE_SIZE_BYTES) {
+        toast.error('Plik przekracza limit 2 MB');
+        e.target.value = '';
+        return;
+      }
+      setFile(selected);
+    }
     e.target.value = '';
   }
 
