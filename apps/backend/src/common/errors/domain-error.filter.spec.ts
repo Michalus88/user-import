@@ -1,5 +1,12 @@
 import { ArgumentsHost, HttpStatus } from '@nestjs/common';
+import {
+  FileMissingError,
+  InvalidEncodingError,
+  MalformedCsvError,
+  RowCountExceededError,
+} from '../../modules/users/csv-import.errors';
 import { UserAlreadyExistsError } from '../../modules/users/users.errors';
+import { DomainError } from './domain-error';
 import { DomainExceptionFilter } from './domain-error.filter';
 
 const mockResponse = () => {
@@ -19,18 +26,37 @@ describe('DomainExceptionFilter', () => {
     filter = new DomainExceptionFilter();
   });
 
-  it('maps UserAlreadyExistsError to 409 with USER_ALREADY_EXISTS code and metadata', () => {
+  it.each([
+    [new UserAlreadyExistsError('alice@example.com'), HttpStatus.CONFLICT, 'USER_ALREADY_EXISTS'],
+    [new FileMissingError(), HttpStatus.BAD_REQUEST, 'FILE_MISSING'],
+    [new MalformedCsvError(), HttpStatus.BAD_REQUEST, 'MALFORMED_CSV'],
+    [new InvalidEncodingError(), HttpStatus.BAD_REQUEST, 'ENCODING_NOT_UTF8'],
+    [new RowCountExceededError(1000), HttpStatus.PAYLOAD_TOO_LARGE, 'ROW_COUNT_EXCEEDED'],
+  ])('maps %s to correct HTTP status and code', (error, expectedStatus, expectedCode) => {
     const res = mockResponse();
-    const host = mockHost(res);
-    const error = new UserAlreadyExistsError('alice@example.com');
+    filter.catch(error, mockHost(res));
 
-    filter.catch(error, host);
-
-    expect(res.status).toHaveBeenCalledWith(HttpStatus.CONFLICT);
+    expect(res.status).toHaveBeenCalledWith(expectedStatus);
     expect(res.json).toHaveBeenCalledWith({
-      statusCode: HttpStatus.CONFLICT,
-      code: 'USER_ALREADY_EXISTS',
+      statusCode: expectedStatus,
+      code: expectedCode,
       message: error.message,
     });
+  });
+
+  it('falls back to 500 for an unmapped DomainError', () => {
+    class UnknownError extends DomainError {
+      constructor() {
+        super('UNKNOWN', 'something went wrong');
+      }
+    }
+
+    const res = mockResponse();
+    filter.catch(new UnknownError(), mockHost(res));
+
+    expect(res.status).toHaveBeenCalledWith(HttpStatus.INTERNAL_SERVER_ERROR);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({ code: 'UNKNOWN', statusCode: HttpStatus.INTERNAL_SERVER_ERROR }),
+    );
   });
 });
