@@ -1,9 +1,6 @@
 import { IMPORT_ERROR_CODES } from '@shared/constants';
 import { CsvImportService } from './csv-import.service';
-import {
-  MalformedCsvError,
-  RowCountExceededError,
-} from './csv-import.errors';
+import { MalformedCsvError, RowCountExceededError } from './csv-import.errors';
 import { UsersRepository } from './users.repository';
 
 const csv = (content: string): Buffer => Buffer.from(content, 'utf-8');

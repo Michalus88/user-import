@@ -52,7 +52,10 @@ describe('AllExceptionsFilter', () => {
 
   it('does not leak the original error message or stack to the client', () => {
     const res = mockResponse();
-    filter.catch(new Error('database connection string: postgres://...'), mockHost(res));
+    filter.catch(
+      new Error('database connection string: postgres://...'),
+      mockHost(res),
+    );
 
     const payload = res.json.mock.calls[0][0] as { message: string };
     expect(payload.message).toBe('Internal server error');
@@ -73,12 +76,18 @@ describe('AllExceptionsFilter', () => {
 
   it('passes HttpException through with its declared status and body', () => {
     const res = mockResponse();
-    const exception = new BadRequestException({ code: 'BAD', message: 'bad input' });
+    const exception = new BadRequestException({
+      code: 'BAD',
+      message: 'bad input',
+    });
 
     filter.catch(exception, mockHost(res));
 
     expect(res.status).toHaveBeenCalledWith(HttpStatus.BAD_REQUEST);
-    expect(res.json).toHaveBeenCalledWith({ code: 'BAD', message: 'bad input' });
+    expect(res.json).toHaveBeenCalledWith({
+      code: 'BAD',
+      message: 'bad input',
+    });
   });
 
   it('does not log when HttpException status is 4xx', () => {
@@ -90,7 +99,10 @@ describe('AllExceptionsFilter', () => {
 
   it('logs when HttpException status is 5xx', () => {
     const res = mockResponse();
-    filter.catch(new InternalServerErrorException('downstream down'), mockHost(res));
+    filter.catch(
+      new InternalServerErrorException('downstream down'),
+      mockHost(res),
+    );
 
     expect(errorSpy).toHaveBeenCalledTimes(1);
   });

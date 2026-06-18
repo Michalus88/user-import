@@ -8,7 +8,9 @@ import { CsvImportService } from './csv-import.service';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 
-const mockFile = (content = 'username,email\nalice,a@x.com'): Express.Multer.File =>
+const mockFile = (
+  content = 'username,email\nalice,a@x.com',
+): Express.Multer.File =>
   ({ buffer: Buffer.from(content, 'utf-8') }) as Express.Multer.File;
 
 describe('UsersController.importCsv', () => {
@@ -41,7 +43,12 @@ describe('UsersController.importCsv', () => {
       skipped: 1,
       total: 2,
       errors: [
-        { row: 3, field: 'email', code: IMPORT_ERROR_CODES.EMAIL_INVALID, message: 'bad' },
+        {
+          row: 3,
+          field: 'email',
+          code: IMPORT_ERROR_CODES.EMAIL_INVALID,
+          message: 'bad',
+        },
       ],
     };
     csvImport.import.mockResolvedValue(result);
@@ -55,7 +62,12 @@ describe('UsersController.importCsv', () => {
       skipped: 1,
       total: 1,
       errors: [
-        { row: 2, field: 'email', code: IMPORT_ERROR_CODES.EMAIL_INVALID, message: 'bad' },
+        {
+          row: 2,
+          field: 'email',
+          code: IMPORT_ERROR_CODES.EMAIL_INVALID,
+          message: 'bad',
+        },
       ],
     };
     csvImport.import.mockResolvedValue(result);

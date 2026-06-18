@@ -1,5 +1,11 @@
 import { ICreateUserRequest } from '@shared/types';
-import { IsEmail, IsString, Matches, MaxLength, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsString,
+  Matches,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 import {
   EMAIL_MAX_LENGTH,
   USERNAME_MAX_LENGTH,
