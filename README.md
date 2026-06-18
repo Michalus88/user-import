@@ -18,7 +18,7 @@ Główny dokument dla osoby oceniającej: [`ANALIZA.md`](./ANALIZA.md) — konte
 pnpm install                                    # zależności
 cp apps/backend/.env.example apps/backend/.env  # config
 docker compose up -d                            # baza
-pnpm db:migrate:deploy                          # migracje
+pnpm db:setup                                   # typy Prismy + migracje
 pnpm dev                                        # backend :3000 + frontend :5173
 ```
 
