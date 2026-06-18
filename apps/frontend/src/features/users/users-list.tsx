@@ -1,17 +1,9 @@
-import { Users } from 'lucide-react';
 import type { IUser } from '@shared/types';
-import { Card } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { UsersPagination } from './users-pagination';
 import { UserAvatar } from './user-avatar';
 import { formatDate } from './utils';
+
+const PAGE_SIZE = 10;
 
 interface UsersListProps {
   users: IUser[];
@@ -36,85 +28,113 @@ export function UsersList({
 }: UsersListProps) {
   const rangeStart = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const rangeEnd = Math.min(page * pageSize, total);
+  const phantomCount = Math.max(0, PAGE_SIZE - users.length);
 
   return (
-    <Card className="overflow-hidden">
-      <div className="flex items-center justify-between p-4">
-        <h2 className="text-base font-semibold text-foreground">Users</h2>
-        <p className="text-xs text-muted-foreground">{total} results</p>
+    <>
+      {/* Panel header */}
+      <div className="flex-shrink-0 border-b border-border px-5 py-4">
+        <div className="font-syne text-[15px] font-bold text-foreground">Users</div>
+        {!isLoading && !isError && (
+          <div className="mt-0.5 font-mono text-[11px] text-subtle">
+            {total.toLocaleString()} results · page {page} of {totalPages}
+          </div>
+        )}
       </div>
-      {isError ? (
-        <EmptyState
-          title="Could not load users"
-          subtitle="Please try refreshing the page."
-        />
-      ) : isLoading && users.length === 0 ? (
-        <EmptyState title="Loading users…" />
-      ) : users.length === 0 ? (
-        <EmptyState
-          title="No users yet"
-          subtitle="Add your first user using the form on the left."
-        />
-      ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>User</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Added</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <UserAvatar
-                      username={user.username}
-                      email={user.email}
-                    />
-                    <span className="font-medium text-foreground">
-                      {user.username}
+
+      {/* Table area */}
+      <div className="flex-1 overflow-hidden">
+        {isError ? (
+          <EmptyRows message="Could not load users. Try refreshing." />
+        ) : isLoading && users.length === 0 ? (
+          <EmptyRows message="Loading users…" />
+        ) : users.length === 0 ? (
+          <EmptyRows message="No users yet" />
+        ) : (
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="border-b border-border bg-background">
+                <th className="h-[38px] px-5 text-left text-[10px] font-bold uppercase tracking-[0.08em] text-subtle">
+                  User
+                </th>
+                <th className="h-[38px] px-5 text-left text-[10px] font-bold uppercase tracking-[0.08em] text-subtle">
+                  Email
+                </th>
+                <th className="h-[38px] px-5 text-left text-[10px] font-bold uppercase tracking-[0.08em] text-subtle">
+                  Added
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((user) => (
+                <tr
+                  key={user.id}
+                  className="h-[52px] border-b border-border transition-colors hover:bg-primary-soft"
+                >
+                  <td className="px-5">
+                    <div className="flex items-center gap-[11px]">
+                      <UserAvatar username={user.username} email={user.email} />
+                      <span className="text-sm font-medium text-foreground">
+                        {user.username}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-5">
+                    <span className="font-mono text-[13px] text-muted-foreground">
+                      {user.email}
                     </span>
-                  </div>
-                </TableCell>
-                <TableCell className="text-gray-600">{user.email}</TableCell>
-                <TableCell className="text-muted-foreground">
-                  {formatDate(user.createdAt)}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
-      {totalPages > 1 && (
-        <UsersPagination
-          page={page}
-          totalPages={totalPages}
-          rangeStart={rangeStart}
-          rangeEnd={rangeEnd}
-          total={total}
-          onPageChange={onPageChange}
-        />
-      )}
-    </Card>
+                  </td>
+                  <td className="px-5">
+                    <span className="font-mono text-[12px] text-subtle">
+                      {formatDate(user.createdAt)}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+              {Array.from({ length: phantomCount }).map((_, i) => (
+                <tr
+                  key={`ph-${i}`}
+                  className="h-[52px] border-b border-border last:border-b-0"
+                />
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {/* Pagination */}
+      <UsersPagination
+        page={page}
+        totalPages={totalPages}
+        rangeStart={rangeStart}
+        rangeEnd={rangeEnd}
+        total={total}
+        onPageChange={onPageChange}
+      />
+    </>
   );
 }
 
-function EmptyState({
-  title,
-  subtitle,
-}: {
-  title: string;
-  subtitle?: string;
-}) {
+function EmptyRows({ message }: { message: string }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-2 px-6 py-12 text-center">
-      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-gray-400">
-        <Users className="h-5 w-5" aria-hidden />
-      </div>
-      <p className="text-sm font-medium text-gray-700">{title}</p>
-      {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
-    </div>
+    <table className="w-full border-collapse">
+      <tbody>
+        {Array.from({ length: PAGE_SIZE }).map((_, i) => (
+          <tr
+            key={i}
+            className="h-[52px] border-b border-border last:border-b-0"
+          >
+            {i === 0 && (
+              <td
+                colSpan={3}
+                className="px-5 text-sm text-subtle"
+              >
+                {message}
+              </td>
+            )}
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }

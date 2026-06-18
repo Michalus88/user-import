@@ -1,29 +1,32 @@
-import { Card, CardContent } from '@/components/ui/card';
-
 interface StatsCardProps {
   total: number;
-  totalPages: number;
+  pageSize: number;
 }
 
-export function StatsCard({ total, totalPages }: StatsCardProps) {
+export function StatsCard({ total, pageSize }: StatsCardProps) {
   return (
-    <Card>
-      <CardContent className="grid grid-cols-2 gap-3 p-3">
-        <div className="rounded-lg bg-primary-soft p-3">
-          <div className="text-xs font-medium text-primary-soft-foreground">
-            Users
+    <div className="shrink-0 rounded-2xl border border-border bg-card p-4 shadow-sm">
+      <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.08em] text-subtle">
+        Overview
+      </div>
+      <div className="grid grid-cols-2 gap-2.5">
+        <div className="rounded-xl bg-primary-soft p-3.5">
+          <div className="font-syne text-[26px] font-bold leading-none text-primary">
+            {total.toLocaleString()}
           </div>
-          <div className="text-2xl font-semibold text-primary-soft-foreground">
-            {total}
-          </div>
-        </div>
-        <div className="rounded-lg bg-muted p-3">
-          <div className="text-xs font-medium text-gray-600">Pages</div>
-          <div className="text-2xl font-semibold text-foreground">
-            {totalPages}
+          <div className="mt-1 text-[11px] font-medium text-primary-soft-foreground">
+            Total users
           </div>
         </div>
-      </CardContent>
-    </Card>
+        <div className="rounded-xl border border-border bg-background p-3.5">
+          <div className="font-syne text-[26px] font-bold leading-none text-foreground">
+            {pageSize > 0 ? Math.ceil(total / pageSize) : 0}
+          </div>
+          <div className="mt-1 text-[11px] font-medium text-muted-foreground">
+            Pages ({pageSize}/pg)
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
