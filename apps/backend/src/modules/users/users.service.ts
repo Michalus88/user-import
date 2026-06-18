@@ -4,7 +4,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UserAlreadyExistsError } from './users.errors';
 import { UsersRepository } from './users.repository';
 
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 10;
 
 export interface UserListResult {
   users: User[];
