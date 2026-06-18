@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { IMPORT_ERROR_CODES } from '@shared/constants';
 import { ImportResult, ImportRowError } from '@shared/types';
 import { parseCsv, ParsedRow } from './csv-import.parser';
@@ -6,6 +6,8 @@ import { UsersRepository } from './users.repository';
 
 @Injectable()
 export class CsvImportService {
+  private readonly logger = new Logger(CsvImportService.name);
+
   constructor(private readonly usersRepository: UsersRepository) {}
 
   async import(buffer: Buffer): Promise<ImportResult> {
@@ -27,9 +29,14 @@ export class CsvImportService {
       }
     }
 
+    const skipped = total - inserted;
+    this.logger.log(
+      `CSV import finished: inserted=${inserted} skipped=${skipped} total=${total}`,
+    );
+
     return {
       inserted,
-      skipped: total - inserted,
+      skipped,
       total,
       errors: [...errors, ...dbDuplicateErrors, ...raceConditionErrors],
     };
