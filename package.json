@@ -9,7 +9,9 @@
     "dev": "pnpm build:packages && concurrently \"pnpm dev:packages\" \"pnpm dev:backend\" \"pnpm dev:frontend\"",
     "lint:frontend": "pnpm --filter frontend lint",
     "lint:backend": "pnpm --filter backend lint",
-    "lint": "pnpm lint:backend && pnpm lint:frontend"
+    "lint": "pnpm lint:backend && pnpm lint:frontend",
+    "db:migrate:deploy": "pnpm --filter backend db:migrate:deploy",
+    "db:migrate:dev": "pnpm --filter backend db:migrate:dev"
   },
   "devDependencies": {
     "concurrently": "^9.0.0"
