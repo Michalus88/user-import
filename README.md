@@ -18,7 +18,7 @@ Minimum jest zadeklarowane w `engines` w `package.json`, nie pinujemy konkretnej
 pnpm install                                    # zależności
 cp apps/backend/.env.example apps/backend/.env  # config
 docker compose up -d                            # baza
-pnpm --filter backend prisma migrate dev        # migracje
+pnpm db:migrate:deploy                          # migracje
 pnpm dev                                        # backend :3000 + frontend :5173
 ```
 
