@@ -8,10 +8,6 @@ const ERROR_CODE_MAP: Record<ImportErrorCode, string> = {
   [IMPORT_ERROR_CODES.EMAIL_DUPLICATE_IN_DB]: 'Już istnieje',
 };
 
-function isImportErrorCode(code: string): code is ImportErrorCode {
-  return code in ERROR_CODE_MAP;
-}
-
-export function translateErrorCode(code: string): string {
-  return isImportErrorCode(code) ? ERROR_CODE_MAP[code] : code;
+export function translateErrorCode(code: ImportErrorCode): string {
+  return ERROR_CODE_MAP[code];
 }

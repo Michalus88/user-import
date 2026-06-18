@@ -58,14 +58,20 @@ describe('ImportResultTable', () => {
     expect(screen.queryByText(IMPORT_ERROR_CODES.EMAIL_INVALID)).not.toBeInTheDocument();
   });
 
-  it('falls back to the raw code when code is unknown', () => {
+  it('shows the original row for in-file duplicates', () => {
     const result: ImportResult = {
       ...baseResult,
       errors: [
-        { row: 1, field: 'row', code: 'UNKNOWN_CODE', message: 'unknown' },
+        {
+          row: 7,
+          field: 'email',
+          code: IMPORT_ERROR_CODES.EMAIL_DUPLICATE_IN_FILE,
+          message: 'Duplicate email — first seen at row 3',
+          relatedRow: 3,
+        },
       ],
     };
     render(<ImportResultTable result={result} />);
-    expect(screen.getByText('UNKNOWN_CODE')).toBeInTheDocument();
+    expect(screen.getByText(/\(w\. 3\)/)).toBeInTheDocument();
   });
 });

@@ -1,5 +1,6 @@
 import { useMemo, useState, type ChangeEvent, type KeyboardEvent } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { IMPORT_ERROR_CODES, type ImportErrorCode } from '@shared/constants';
 import type { ImportResult } from '@shared/types';
 import { cn } from '@/lib/utils';
 import { translateErrorCode } from './error-code-map';
@@ -11,12 +12,12 @@ interface ImportResultTableProps {
 }
 
 export function ImportResultTable({ result }: ImportResultTableProps) {
-  const [activeCode, setActiveCode] = useState<string | null>(null);
+  const [activeCode, setActiveCode] = useState<ImportErrorCode | null>(null);
   const [errPage, setErrPage] = useState(1);
   const [gotoValue, setGotoValue] = useState('');
 
   const codeCounts = useMemo(() => {
-    const map = new Map<string, number>();
+    const map = new Map<ImportErrorCode, number>();
     for (const e of result.errors) {
       map.set(e.code, (map.get(e.code) ?? 0) + 1);
     }
@@ -38,7 +39,7 @@ export function ImportResultTable({ result }: ImportResultTableProps) {
     clampedPage * ERR_PAGE_SIZE,
   );
 
-  function handleFilterChange(code: string | null) {
+  function handleFilterChange(code: ImportErrorCode | null) {
     setActiveCode(code);
     setErrPage(1);
     setGotoValue('');
@@ -126,9 +127,9 @@ export function ImportResultTable({ result }: ImportResultTableProps) {
             <div className="overflow-hidden">
               <table className="w-full border-collapse" style={{ tableLayout: 'fixed' }}>
                 <colgroup>
-                  <col style={{ width: '50px' }} />
-                  <col style={{ width: '50%' }} />
-                  <col style={{ width: '50%' }} />
+                  <col style={{ width: '80px' }} />
+                  <col style={{ width: '30%' }} />
+                  <col />
                 </colgroup>
                 <thead>
                   <tr className="border-b border-border bg-background">
@@ -157,6 +158,11 @@ export function ImportResultTable({ result }: ImportResultTableProps) {
                       </td>
                       <td className="overflow-hidden text-ellipsis whitespace-nowrap px-3 text-xs text-foreground">
                         {translateErrorCode(err.code)}
+                        {err.code === IMPORT_ERROR_CODES.EMAIL_DUPLICATE_IN_FILE && (
+                          <span className="ml-1 text-muted-foreground">
+                            (w. {err.relatedRow})
+                          </span>
+                        )}
                       </td>
                     </tr>
                   ))}
