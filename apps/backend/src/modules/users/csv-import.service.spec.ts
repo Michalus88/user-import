@@ -114,13 +114,14 @@ describe('CsvImportService', () => {
       expect(repo.createMany).not.toHaveBeenCalled();
     });
 
-    it('returns inserted=0 when all rows fail validation', async () => {
+    it('returns inserted=0 and counts the invalid row as skipped', async () => {
       repo.findEmailsIn.mockResolvedValue([]);
 
       const result = await service.import(csv('username,email\n,bad-email'));
 
       expect(result.inserted).toBe(0);
-      expect(result.skipped).toBe(0);
+      expect(result.skipped).toBe(1);
+      expect(result.total).toBe(1);
       expect(repo.createMany).not.toHaveBeenCalled();
     });
 
@@ -150,6 +151,31 @@ describe('CsvImportService', () => {
       await expect(service.import(csv(content))).rejects.toThrow(
         RowCountExceededError,
       );
+    });
+  });
+
+  describe('inserted + skipped invariant', () => {
+    it('keeps inserted + skipped equal to total across mixed outcomes', async () => {
+      repo.findEmailsIn.mockResolvedValue(['carol@example.com']);
+      repo.createMany.mockResolvedValue(2);
+
+      const result = await service.import(
+        csv(
+          [
+            'username,email',
+            'alice,alice@example.com',
+            'bob,bob@example.com',
+            ',bad-email',
+            'carol,carol@example.com',
+            'dave,alice@example.com',
+          ].join('\n'),
+        ),
+      );
+
+      expect(result.total).toBe(5);
+      expect(result.inserted).toBe(2);
+      expect(result.skipped).toBe(3);
+      expect(result.inserted + result.skipped).toBe(result.total);
     });
   });
 

@@ -9,7 +9,7 @@ export class CsvImportService {
   constructor(private readonly usersRepository: UsersRepository) {}
 
   async import(buffer: Buffer): Promise<ImportResult> {
-    const { validRows, errors, skippedInFileCount, total } = parseCsv(buffer);
+    const { validRows, errors, total } = parseCsv(buffer);
 
     const { eligible, dbDuplicateErrors } =
       await this.partitionByDbDuplicates(validRows);
@@ -29,10 +29,7 @@ export class CsvImportService {
 
     return {
       inserted,
-      skipped:
-        skippedInFileCount +
-        dbDuplicateErrors.length +
-        raceConditionErrors.length,
+      skipped: total - inserted,
       total,
       errors: [...errors, ...dbDuplicateErrors, ...raceConditionErrors],
     };
