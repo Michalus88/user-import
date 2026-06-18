@@ -245,7 +245,11 @@ importers:
         specifier: ^5.7.3
         version: 5.9.3
 
-  packages/types: {}
+  packages/types:
+    dependencies:
+      '@shared/constants':
+        specifier: workspace:*
+        version: link:../constants
 
 packages:
 
