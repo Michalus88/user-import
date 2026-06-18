@@ -10,6 +10,9 @@
     "lint:frontend": "pnpm --filter frontend lint",
     "lint:backend": "pnpm --filter backend lint",
     "lint": "pnpm lint:backend && pnpm lint:frontend",
+    "test:fe": "pnpm --filter frontend test",
+    "test:be": "pnpm --filter backend test",
+    "test": "pnpm test:be && pnpm test:fe",
     "db:migrate:deploy": "pnpm --filter backend db:migrate:deploy",
     "db:migrate:dev": "pnpm --filter backend db:migrate:dev"
   },

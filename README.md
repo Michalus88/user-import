@@ -2,6 +2,8 @@
 
 Aplikacja pozwalająca administratorowi dodawać użytkowników pojedynczo przez formularz oraz importować większą grupę z pliku CSV.
 
+Stack: NestJS + Prisma + PostgreSQL na backendzie, React + Vite + Tailwind + TanStack Query na frontendzie. Monorepo pnpm.
+
 Główny dokument dla osoby oceniającej: [`ANALIZA.md`](./ANALIZA.md) — kontekst biznesowo-techniczny, decyzje, ograniczenia CSV i mitygacje.
 
 ## Wymagania
@@ -25,8 +27,17 @@ pnpm dev                                        # backend :3000 + frontend :5173
 ## Testy
 
 ```bash
-pnpm --filter backend test
+pnpm test           # backend + frontend
+pnpm test:be        # tylko backend
+pnpm test:fe        # tylko frontend
 ```
+
+## Przykładowe pliki CSV
+
+W katalogu `samples/` są dwa pliki do testu importu:
+
+- `users-valid.csv` — 5 poprawnych wierszy (happy path).
+- `users-mixed.csv` — 15 wierszy pokazujących wszystkie typy błędów per wiersz i filtry w raporcie (zła nazwa, zły format emaila, duplikat w pliku, duplikat względem bazy). Najpierw zaimportuj `users-valid.csv`, żeby aktywować filtr „już istnieje".
 
 ## Struktura
 
