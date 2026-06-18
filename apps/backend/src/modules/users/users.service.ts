@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, User } from '@prisma/client';
+import { USERS_PAGE_SIZE } from '@shared/constants';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserAlreadyExistsError } from './users.errors';
 import { UsersRepository } from './users.repository';
-
-const PAGE_SIZE = 10;
 
 export interface UserListResult {
   users: User[];
@@ -32,11 +31,11 @@ export class UsersService {
   }
 
   async findAll(page: number): Promise<UserListResult> {
-    const skip = (page - 1) * PAGE_SIZE;
+    const skip = (page - 1) * USERS_PAGE_SIZE;
     const { users, total } = await this.usersRepository.findAll(
       skip,
-      PAGE_SIZE,
+      USERS_PAGE_SIZE,
     );
-    return { users, total, page, pageSize: PAGE_SIZE };
+    return { users, total, page, pageSize: USERS_PAGE_SIZE };
   }
 }

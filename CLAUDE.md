@@ -85,7 +85,7 @@ Reguły:
 - Mapowanie błędów: Prisma `P2002` (unique constraint) → błąd domenowy (`UserAlreadyExistsError`), mapowany globalnie w `DomainExceptionFilter` na `409 Conflict` z czytelnym `code` w body. Nie sprawdzać istnienia przed `INSERT` (race condition).
 - Migracje: `prisma migrate dev` w trybie dev; schema żyje w `apps/backend/prisma/schema.prisma`.
 - Typy odpowiedzi: korzystamy z auto-generowanych typów Prismy (`User` z `@prisma/client`); nie duplikujemy ich jako interfejsów.
-- Endpoint `GET /users` zwraca `{ users, total, page, pageSize }`, nie samą tablicę — wymagane do UI paginacji. Default `pageSize = 50`.
+- Endpoint `GET /users` zwraca `{ users, total, page, pageSize }`, nie samą tablicę — wymagane do UI paginacji. Default `pageSize = 10` (stała `USERS_PAGE_SIZE` w `packages/constants`, używana przez backend i frontend).
 - ESLint blokuje `any` i floating promises jako błąd. Konfiguracja w `apps/backend/eslint.config.mjs`.
 - Testy: unit testy parsera, serwisu, kontrolera i filtrów. CSV w testach budowane inline przez `Buffer.from(...)`, bez osobnego katalogu fixtures.
 

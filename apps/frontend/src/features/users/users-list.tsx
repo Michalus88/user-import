@@ -1,9 +1,8 @@
 import type { IUser } from '@shared/types';
+import { USERS_PAGE_SIZE } from '@shared/constants';
 import { UsersPagination } from './users-pagination';
 import { UserAvatar } from './user-avatar';
 import { formatDate } from './utils';
-
-const PAGE_SIZE = 10;
 
 interface UsersListProps {
   users: IUser[];
@@ -28,7 +27,7 @@ export function UsersList({
 }: UsersListProps) {
   const rangeStart = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const rangeEnd = Math.min(page * pageSize, total);
-  const phantomCount = Math.max(0, PAGE_SIZE - users.length);
+  const phantomCount = Math.max(0, USERS_PAGE_SIZE - users.length);
 
   return (
     <>
@@ -119,7 +118,7 @@ function EmptyRows({ message }: { message: string }) {
   return (
     <table className="w-full border-collapse">
       <tbody>
-        {Array.from({ length: PAGE_SIZE }).map((_, i) => (
+        {Array.from({ length: USERS_PAGE_SIZE }).map((_, i) => (
           <tr
             key={i}
             className="h-[52px] border-b border-border last:border-b-0"

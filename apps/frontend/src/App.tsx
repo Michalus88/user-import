@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Users, UserPlus, Upload } from 'lucide-react';
+import { USERS_PAGE_SIZE } from '@shared/constants';
 import { AddUserForm } from '@/features/users/add-user-form';
 import { UsersList } from '@/features/users/users-list';
 import { StatsCard } from '@/features/users/stats-card';
@@ -24,7 +25,7 @@ export function App() {
 
   const users = data?.users ?? [];
   const total = data?.total ?? 0;
-  const pageSize = data?.pageSize ?? 10;
+  const pageSize = data?.pageSize ?? USERS_PAGE_SIZE;
   const totalPages = pageSize ? getTotalPages(total, pageSize) : 1;
 
   return (
